@@ -127,7 +127,7 @@ run_post basic_injection_scanner.sh hook_basic_injection_scanner "cat f" "Normal
 
 # Phase 11: error_swallow_guard
 echo "Phase 11: error_swallow_guard"
-TMP=$(mktemp /tmp/guardrail-test-XXXXX.ts)
+TMP=$(mktemp /tmp/guardrail-payment-XXXXX.ts)
 printf 'async function handlePayment() {\n  try { pay(); } catch (e) { console.log(e); }\n}\n' > "$TMP"
 run_edit error_swallow_guard.sh hook_error_swallow_guard "$TMP"; check swallow DETECT "catch in payment"
 rm -f "$TMP"
