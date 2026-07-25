@@ -36,21 +36,12 @@ _guardrail_run() {
   declare -F "$fn" >/dev/null && "$fn"
 }
 
-_guardrail_load_guard "output_pii_scanner.sh"
-_guardrail_load_guard "prompt_injection_scanner.sh"
-_guardrail_load_guard "multi_step_attack_guard.sh"
-_guardrail_load_guard "semantic_injection_guard.sh"
-_guardrail_load_guard "silent_failure_detector.sh"
+# Core guards only
 _guardrail_load_guard "env_dump_detector.sh"
-_guardrail_load_guard "pii_deutsch_guard.sh"
+_guardrail_load_guard "basic_injection_scanner.sh"
 
-_guardrail_run hook_output_pii_scanner
-_guardrail_run hook_prompt_injection_scanner
-_guardrail_run hook_multi_step_attack_guard
-_guardrail_run hook_semantic_injection_guard
-_guardrail_run hook_silent_failure_detector
 _guardrail_run hook_env_dump_detector
-_guardrail_run hook_pii_deutsch_guard
+_guardrail_run hook_basic_injection_scanner
 
 # --- Load custom post-bash guards ---
 if [ -d "$CUSTOM_DIR" ]; then

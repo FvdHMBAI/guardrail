@@ -35,8 +35,11 @@ mkdir -p "$INSTALL_DIR/guards/custom"
 mkdir -p "$INSTALL_DIR/dispatchers"
 mkdir -p "$INSTALL_DIR/lib"
 
-# Copy files
-cp -r "$SCRIPT_DIR/guards/core/"*.sh "$INSTALL_DIR/guards/core/" 2>/dev/null || true
+# Copy ONLY the 10 Core guards (not Premium guards that may exist locally)
+CORE_GUARDS="main_push_guard basic_pii_gate basic_secret_detector destructive_path_guard firewall_flush_guard service_protection_guard mass_update_guard env_dump_detector basic_injection_scanner error_swallow_guard"
+for guard in $CORE_GUARDS; do
+  [ -f "$SCRIPT_DIR/guards/core/${guard}.sh" ] && cp "$SCRIPT_DIR/guards/core/${guard}.sh" "$INSTALL_DIR/guards/core/"
+done
 cp -r "$SCRIPT_DIR/dispatchers/"*.sh "$INSTALL_DIR/dispatchers/"
 cp -r "$SCRIPT_DIR/lib/"*.sh "$INSTALL_DIR/lib/"
 cp "$SCRIPT_DIR/guardrail.config.sh" "$INSTALL_DIR/"
@@ -109,7 +112,7 @@ echo "========================="
 echo "GuardRail installed successfully!"
 echo "  $GUARD_COUNT core guards active"
 echo "  Config: $INSTALL_DIR/guardrail.config.sh"
-echo "  Audit log: $(grep GUARDRAIL_AUDIT_LOG "$INSTALL_DIR/guardrail.config.sh" | head -1 | grep -oP ':-[^}]+' | sed 's/^:-//')"
+echo "  Audit log: \${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log}"
 echo ""
 echo "Next steps:"
 echo "  1. Customize $INSTALL_DIR/guardrail.config.sh"

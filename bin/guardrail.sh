@@ -17,8 +17,11 @@ Usage: guardrail <command> [options]
 Commands:
   init       Install GuardRail into Claude Code
   test       Run regression tests
+  pentest    Run security PEN-test against all guards
   status     Show active guards and recent activity
   audit      Generate audit report
+  new        Create a new guard from template
+  upgrade    Learn about GuardRail Pro
   version    Show version
 
 Options:
@@ -91,10 +94,30 @@ cmd_status() {
 }
 
 cmd_audit() {
-  local days=7
+  local days=7 compliance=""
   while [ $# -gt 0 ]; do
     case "$1" in
       --days) days="$2"; shift 2 ;;
+      --compliance)
+        cat << 'COMPEOF'
+GuardRail Pro Compliance Audit
+==============================
+
+Compliance audit with EU AI Act article mapping and PDF export
+is available in GuardRail Pro.
+
+Includes:
+  - Guard-to-Article mapping (Art. 9, 10, 12, 14, 15)
+  - Risk classification per guard
+  - Compliance coverage percentage
+  - PDF report for auditors and regulators
+  - Evidence trail with timestamps
+
+Available with GuardRail Pro subscription.
+Learn more: https://guardrail.dev/pro
+
+COMPEOF
+        return ;;
       *) shift ;;
     esac
   done
@@ -140,6 +163,263 @@ cmd_audit() {
   done
 }
 
+cmd_pentest() {
+  local pro_flag=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --pro) pro_flag=1; shift ;;
+      *) shift ;;
+    esac
+  done
+
+  if [ -n "$pro_flag" ]; then
+    cat << 'PROEOF'
+GuardRail Pro PEN-Test
+======================
+
+Pro PEN-Test includes:
+  - 50+ attack patterns from real production incidents
+  - Profile escape testing (database, docker, remote, deploy)
+  - Bypass persistence checks (gate files, skip flags)
+  - Multi-step attack sequence simulation
+  - JSON compliance report for auditors
+
+Available with GuardRail Pro subscription.
+Learn more: https://guardrail.dev/pro
+
+PROEOF
+    return
+  fi
+
+  local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
+  local GUARDS_DIR="$INSTALL_DIR/guards/core"
+  local LIB_DIR="$INSTALL_DIR/lib"
+  local P=0 F=0
+
+  echo "GuardRail PEN-Test v$VERSION"
+  echo "==========================="
+  echo ""
+
+  # Phase 1: Syntax check
+  echo "Phase 1: Syntax Check"
+  if [ ! -d "$GUARDS_DIR" ]; then
+    echo "  ERROR: Guards not installed. Run 'guardrail init' first."
+    exit 1
+  fi
+  for g in "$GUARDS_DIR"/*.sh; do
+    [ -f "$g" ] || continue
+    if bash -n "$g" 2>/dev/null; then
+      P=$((P+1))
+    else
+      F=$((F+1)); echo "  FAIL: $(basename "$g") has syntax errors"
+    fi
+  done
+  echo "  $P guards passed syntax check"
+  echo ""
+
+  # Phase 2: Dispatcher check
+  echo "Phase 2: Dispatcher Wiring"
+  for d in "$INSTALL_DIR/dispatchers"/*.sh; do
+    [ -f "$d" ] || continue
+    if bash -n "$d" 2>/dev/null; then
+      P=$((P+1)); echo "  OK: $(basename "$d")"
+    else
+      F=$((F+1)); echo "  FAIL: $(basename "$d") has syntax errors"
+    fi
+  done
+  echo ""
+
+  # Phase 3: Guard simulation
+  echo "Phase 3: Security Gate Simulation"
+
+  _pen_pre() {
+    local gf="$1" fn="$2" cmd="$3"
+    (
+      source "$LIB_DIR/guardrail-common.sh" 2>/dev/null
+      source "$GUARDS_DIR/$gf" 2>/dev/null
+      CMD="$cmd"; CMD_SHELL="$cmd"; SESSION_ID="pentest-$$"; OUTPUT=""; FILE_PATH=""
+      R=""
+      deny() { R="DENY"; }; allow_with_msg() { R="ALLOW"; }; warn() { R="WARN"; }
+      $fn 2>/dev/null; echo "${R:-PASS}"
+    )
+  }
+
+  _pen_check() {
+    local name="$1" expect="$2" result="$3" desc="$4"
+    if [ "$expect" = "DENY" ] && [ "$result" = "DENY" ]; then
+      P=$((P+1))
+    elif [ "$expect" = "PASS" ] && [ "$result" != "DENY" ]; then
+      P=$((P+1))
+    else
+      F=$((F+1)); echo "  FAIL: [$name] $desc (expected $expect, got $result)"
+    fi
+  }
+
+  # Test each core guard with 2 attacks + 1 false positive
+  if [ -f "$GUARDS_DIR/main_push_guard.sh" ]; then
+    r=$(_pen_pre main_push_guard.sh hook_main_push_guard "git push origin main")
+    _pen_check main_push DENY "$r" "push to main"
+    r=$(_pen_pre main_push_guard.sh hook_main_push_guard "git push --force origin feat")
+    _pen_check main_push DENY "$r" "force push"
+    r=$(_pen_pre main_push_guard.sh hook_main_push_guard "git push origin develop")
+    _pen_check main_push PASS "$r" "push develop (FP)"
+  fi
+
+  if [ -f "$GUARDS_DIR/destructive_path_guard.sh" ]; then
+    r=$(_pen_pre destructive_path_guard.sh hook_destructive_path_guard "rm -rf /etc")
+    _pen_check destr DENY "$r" "rm -rf /etc"
+    r=$(_pen_pre destructive_path_guard.sh hook_destructive_path_guard "rm file.txt")
+    _pen_check destr PASS "$r" "rm single file (FP)"
+  fi
+
+  if [ -f "$GUARDS_DIR/firewall_flush_guard.sh" ]; then
+    r=$(_pen_pre firewall_flush_guard.sh hook_firewall_flush_guard "iptables -F")
+    _pen_check fw DENY "$r" "iptables flush"
+    r=$(_pen_pre firewall_flush_guard.sh hook_firewall_flush_guard "ufw allow 80")
+    _pen_check fw PASS "$r" "ufw allow (FP)"
+  fi
+
+  if [ -f "$GUARDS_DIR/service_protection_guard.sh" ]; then
+    r=$(_pen_pre service_protection_guard.sh hook_service_protection_guard "systemctl stop docker")
+    _pen_check svc DENY "$r" "stop docker"
+    r=$(_pen_pre service_protection_guard.sh hook_service_protection_guard "systemctl restart myapp")
+    _pen_check svc PASS "$r" "restart myapp (FP)"
+  fi
+
+  echo ""
+  echo "==========================="
+  echo "  Passed: $P   Failed: $F"
+  echo "==========================="
+  if [ "$F" -gt 0 ]; then
+    echo ""
+    echo "Some security gates failed. Review the output above."
+    exit 1
+  fi
+  echo ""
+  echo "All security gates passed."
+  echo ""
+  echo "For advanced PEN-testing (50+ attack patterns, profile escapes,"
+  echo "bypass persistence checks): guardrail pentest --pro"
+}
+
+cmd_new() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: guardrail new <guard_name>"
+    echo ""
+    echo "Creates a new guard template with matching test file."
+    echo ""
+    echo "Example:"
+    echo "  guardrail new block_npm_global"
+    exit 1
+  fi
+
+  local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
+  local CUSTOM_DIR="$INSTALL_DIR/guards/custom"
+  local GUARD_FILE="$CUSTOM_DIR/${name}.sh"
+  local TEST_FILE="$CUSTOM_DIR/${name}_test.sh"
+
+  mkdir -p "$CUSTOM_DIR"
+
+  if [ -f "$GUARD_FILE" ]; then
+    echo "Guard already exists: $GUARD_FILE"
+    exit 1
+  fi
+
+  cat > "$GUARD_FILE" << GUARDEOF
+#!/bin/bash
+# GuardRail Custom Guard: $name
+# TODO: Describe what this guard protects against.
+# License: MIT
+#
+# Type: pre-bash (rename with post_ prefix for post-bash, edit_ for post-edit)
+# Shared vars: \$CMD, \$CMD_SHELL, \$SESSION_ID
+# Shared fns: deny(), warn(), guardrail_audit()
+
+hook_${name}() {
+  # TODO: Replace with your pattern
+  if echo "\$CMD_SHELL" | grep -qE 'YOUR_DANGEROUS_PATTERN'; then
+    guardrail_audit "$name" "blocked" "\$(echo "\$CMD_SHELL" | head -c 60)"
+    deny "${name^^}: Explain why this is blocked. Suggest alternative."
+    return
+  fi
+}
+GUARDEOF
+
+  cat > "$TEST_FILE" << TESTEOF
+#!/bin/bash
+# Tests for $name
+# Run: bash $TEST_FILE
+
+SCRIPT_DIR="\$(cd "\$(dirname "\$0")/../.." && pwd)"
+source "\$SCRIPT_DIR/lib/guardrail-common.sh"
+source "\$(dirname "\$0")/${name}.sh"
+
+P=0; F=0
+CMD=""; CMD_SHELL=""; SESSION_ID="test-\$\$"; OUTPUT=""; R=""
+deny() { R="DENY: \$1"; }
+
+echo "Tests for $name"
+echo "========================="
+
+# True positive: must block
+CMD="YOUR_DANGEROUS_COMMAND"; CMD_SHELL="\$CMD"; R=""
+hook_${name}
+if echo "\$R" | grep -q "DENY"; then echo "  OK: blocks dangerous command"; P=\$((P+1))
+else echo "  FAIL: should block dangerous command"; F=\$((F+1)); fi
+
+# False positive: must pass
+CMD="safe command here"; CMD_SHELL="\$CMD"; R=""
+hook_${name}
+if echo "\$R" | grep -q "DENY"; then echo "  FAIL: should allow safe command"; F=\$((F+1))
+else echo "  OK: allows safe command"; P=\$((P+1)); fi
+
+echo ""
+echo "Passed: \$P  Failed: \$F"
+[ "\$F" -eq 0 ] && echo "ALL PASSED" || exit 1
+TESTEOF
+
+  chmod +x "$GUARD_FILE" "$TEST_FILE"
+
+  echo "Guard created:"
+  echo "  Guard: $GUARD_FILE"
+  echo "  Test:  $TEST_FILE"
+  echo ""
+  echo "Next steps:"
+  echo "  1. Edit $GUARD_FILE -- replace YOUR_DANGEROUS_PATTERN"
+  echo "  2. Edit $TEST_FILE -- add your test commands"
+  echo "  3. Run: bash $TEST_FILE"
+  echo "  4. Guard loads automatically on next command"
+}
+
+cmd_upgrade() {
+  cat << 'EOF'
+GuardRail Pro
+=============
+
+40+ advanced guards derived from real production incidents.
+
+What's included:
+  - Advanced PII detection (15+ leak vectors)
+  - Multi-step attack detection
+  - Script content analysis
+  - Supply chain security (npm audit, license compliance)
+  - Infrastructure protection guards
+  - Agent self-bypass prevention
+  - PEN-test framework (50+ attack patterns)
+  - EU AI Act compliance reports (PDF)
+  - Priority support and updates
+
+Pricing:
+  EUR 20/dev/month
+  EUR 5,000 one-time compliance kit
+
+Learn more: https://guardrail.dev/pro
+Contact:   pro@promptandbuild.de
+
+EOF
+}
+
 cmd_version() {
   echo "guardrail v$VERSION"
 }
@@ -148,8 +428,11 @@ cmd_version() {
 case "${1:-}" in
   init)     shift; cmd_init "$@" ;;
   test)     shift; cmd_test "$@" ;;
+  pentest)  shift; cmd_pentest "$@" ;;
   status)   shift; cmd_status "$@" ;;
   audit)    shift; cmd_audit "$@" ;;
+  new)      shift; cmd_new "$@" ;;
+  upgrade)  cmd_upgrade ;;
   version)  cmd_version ;;
   -v|--version) cmd_version ;;
   -h|--help|"") usage ;;
