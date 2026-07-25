@@ -1,6 +1,6 @@
 {
   "name": "guardrail-agent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pre-execution security guards for AI coding agents. EU AI Act ready.",
   "bin": {
     "guardrail": "./bin/guardrail.sh"
