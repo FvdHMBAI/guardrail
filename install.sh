@@ -35,8 +35,11 @@ mkdir -p "$INSTALL_DIR/guards/custom"
 mkdir -p "$INSTALL_DIR/dispatchers"
 mkdir -p "$INSTALL_DIR/lib"
 
-# Copy files
-cp -r "$SCRIPT_DIR/guards/core/"*.sh "$INSTALL_DIR/guards/core/" 2>/dev/null || true
+# Copy ONLY the 10 Core guards (not Premium guards that may exist locally)
+CORE_GUARDS="main_push_guard basic_pii_gate basic_secret_detector destructive_path_guard firewall_flush_guard service_protection_guard mass_update_guard env_dump_detector basic_injection_scanner error_swallow_guard"
+for guard in $CORE_GUARDS; do
+  [ -f "$SCRIPT_DIR/guards/core/${guard}.sh" ] && cp "$SCRIPT_DIR/guards/core/${guard}.sh" "$INSTALL_DIR/guards/core/"
+done
 cp -r "$SCRIPT_DIR/dispatchers/"*.sh "$INSTALL_DIR/dispatchers/"
 cp -r "$SCRIPT_DIR/lib/"*.sh "$INSTALL_DIR/lib/"
 cp "$SCRIPT_DIR/guardrail.config.sh" "$INSTALL_DIR/"

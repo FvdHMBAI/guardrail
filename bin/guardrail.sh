@@ -19,6 +19,7 @@ Commands:
   test       Run regression tests
   status     Show active guards and recent activity
   audit      Generate audit report
+  upgrade    Learn about GuardRail Pro
   version    Show version
 
 Options:
@@ -140,6 +141,34 @@ cmd_audit() {
   done
 }
 
+cmd_upgrade() {
+  cat << 'EOF'
+GuardRail Pro
+=============
+
+40+ advanced guards derived from real production incidents.
+
+What's included:
+  - Advanced PII detection (15+ leak vectors)
+  - Multi-step attack detection
+  - Script content analysis
+  - Supply chain security (npm audit, license compliance)
+  - Infrastructure protection guards
+  - Agent self-bypass prevention
+  - PEN-test framework (50+ attack patterns)
+  - EU AI Act compliance reports (PDF)
+  - Priority support and updates
+
+Pricing:
+  EUR 20/dev/month
+  EUR 5,000 one-time compliance kit
+
+Learn more: https://guardrail.dev/pro
+Contact:   pro@promptandbuild.de
+
+EOF
+}
+
 cmd_version() {
   echo "guardrail v$VERSION"
 }
@@ -150,6 +179,7 @@ case "${1:-}" in
   test)     shift; cmd_test "$@" ;;
   status)   shift; cmd_status "$@" ;;
   audit)    shift; cmd_audit "$@" ;;
+  upgrade)  cmd_upgrade ;;
   version)  cmd_version ;;
   -v|--version) cmd_version ;;
   -h|--help|"") usage ;;
