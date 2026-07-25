@@ -1,7 +1,7 @@
 # GuardRail
 
 Pre-execution security guards for AI coding agents.
-Open source. Battle-tested. EU AI Act ready.
+Open source. Production-grade patterns. EU AI Act ready.
 
 **Works with:** Claude Code, Cursor, GitHub Copilot, Windsurf
 
@@ -172,5 +172,12 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ---
 
-Built by [Prompt & Build](https://promptandbuild.de). Battle-tested in
-production with 100+ guards across 15 applications.
+Built by [Prompt & Build](https://promptandbuild.de). Derived from
+production patterns running 100+ guards across 15 applications.
+
+## Disclaimer
+
+GuardRail reduces risk but does not guarantee complete protection. Pattern-based
+guards cannot catch every possible attack vector. GuardRail is not a substitute
+for security audits, penetration testing, or compliance certification. Use it as
+one layer in a defense-in-depth strategy.
