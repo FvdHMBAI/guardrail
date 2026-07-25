@@ -1,0 +1,49 @@
+{
+  "name": "guardrail-ai",
+  "version": "0.1.0",
+  "description": "Pre-execution security guards for AI coding agents. EU AI Act ready.",
+  "bin": {
+    "guardrail": "./bin/guardrail.sh"
+  },
+  "scripts": {
+    "test": "./tests/regression.sh",
+    "postinstall": "echo '\\n  Run: npx guardrail init\\n'"
+  },
+  "keywords": [
+    "ai-safety",
+    "claude-code",
+    "cursor",
+    "copilot",
+    "guardrails",
+    "security",
+    "pre-execution",
+    "eu-ai-act",
+    "governance",
+    "coding-agents"
+  ],
+  "author": "Prompt & Build",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/promptandbuild/guardrail.git"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "os": [
+    "linux",
+    "darwin"
+  ],
+  "files": [
+    "bin/",
+    "guards/core/",
+    "guards/custom/",
+    "dispatchers/",
+    "lib/",
+    "tests/",
+    "guardrail.config.sh",
+    "install.sh",
+    "LICENSE",
+    "README.md"
+  ]
+}

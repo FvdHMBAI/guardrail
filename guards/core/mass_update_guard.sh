@@ -1,0 +1,26 @@
+#!/bin/bash
+# GuardRail Core Guard: mass_update_guard
+# Blocks SQL UPDATE/DELETE without WHERE clause to prevent accidental mass changes.
+# License: MIT
+#
+# Shared vars: $CMD, $SESSION_ID
+# Shared fns: deny()
+
+hook_mass_update_guard() {
+  local _tables_re
+  _tables_re=$(_guardrail_list_to_regex "$GUARDRAIL_PROTECTED_TABLES")
+
+  if echo "$CMD" | grep -qiE "UPDATE[[:space:]]+(public\\.)?${_tables_re}[[:space:]]+SET"; then
+    if ! echo "$CMD" | grep -qiE 'WHERE\s+.*\bid\s*='; then
+      guardrail_log "mass-update-guard" "DENY sess=$SESSION_ID cmd=\"$(echo "$CMD" | head -c 200)\""
+      deny "MASS-UPDATE-GUARD: UPDATE on protected table WITHOUT 'WHERE id = ...' detected. Mass updates are blocked. Update records individually with an id filter."
+    fi
+  fi
+
+  if echo "$CMD" | grep -qiE "DELETE[[:space:]]+FROM[[:space:]]+(public\\.)?${_tables_re}" ; then
+    if ! echo "$CMD" | grep -qiE 'WHERE\s+'; then
+      guardrail_log "mass-update-guard" "DENY DELETE without WHERE sess=$SESSION_ID"
+      deny "MASS-UPDATE-GUARD: DELETE on protected table WITHOUT WHERE clause detected. Delete records individually."
+    fi
+  fi
+}
