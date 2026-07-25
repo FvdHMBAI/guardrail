@@ -1,5 +1,5 @@
 {
-  "name": "guardrail-ai",
+  "name": "guardrail-agent",
   "version": "0.1.0",
   "description": "Pre-execution security guards for AI coding agents. EU AI Act ready.",
   "bin": {
@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "./tests/regression.sh",
-    "postinstall": "echo '\\n  Run: npx guardrail init\\n'"
+    "postinstall": "echo '\\n  Run: npx guardrail-agent init\\n'"
   },
   "keywords": [
     "ai-safety",

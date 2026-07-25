@@ -29,7 +29,7 @@ Options:
   -v, --version Show version
 
 Examples:
-  npx guardrail init          Install guards
+  npx guardrail-agent init    Install guards
   guardrail test              Run all tests
   guardrail status            Check guard status
   guardrail audit --days 30   Audit report for last 30 days

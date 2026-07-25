@@ -17,7 +17,7 @@ the EU, you need governance. GuardRail gives you that in one command.
 ## Quick Start
 
 ```bash
-npx guardrail init
+npx guardrail-agent init
 ```
 
 That's it. 10 security guards are now active.
