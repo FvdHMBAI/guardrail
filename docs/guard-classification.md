@@ -81,15 +81,13 @@ patterns that take months of operation to discover.
 
 ---
 
-## Internal Guards (our setup only)
+## Internal Guards (not included)
 
-Domain-specific guards for our golf SaaS ecosystem, vault, graphify, ticket system,
-carousel/GRIP content, and personal preferences. Not included in any release.
+Domain-specific guards tailored to a particular production environment.
+Not included in any release. Shown here only for completeness.
 
-91 guards. Categories: Golf/Club-App (12), Vault/RAG (8), Forma.Golf (5),
-Ticket system (8), Content/Carousel (7), Deploy verification (15),
-Code quality (9), Personal preferences (6), Session management (8),
-Context/Workflow (13).
+91 guards across categories: domain-specific app logic, knowledge base,
+deploy verification, code quality, session management, and workflow automation.
 
 ---
 

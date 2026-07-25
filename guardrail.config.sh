@@ -42,7 +42,7 @@ GUARDRAIL_PROTECTED_BRANCHES="${GUARDRAIL_PROTECTED_BRANCHES:-main master produc
 
 # --- Protected Paths ---
 # Space-separated list of paths that should never be deleted/overwritten
-GUARDRAIL_PROTECTED_PATHS="${GUARDRAIL_PROTECTED_PATHS:-/etc /usr /var /boot}"
+GUARDRAIL_PROTECTED_PATHS="${GUARDRAIL_PROTECTED_PATHS:-/home /etc /var/lib/docker /var/lib/postgresql}"
 
 # Protected services (blocked from kill/stop)
 GUARDRAIL_PROTECTED_SERVICES="${GUARDRAIL_PROTECTED_SERVICES:-sshd nginx postgres docker containerd}"
