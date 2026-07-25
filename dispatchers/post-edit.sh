@@ -36,13 +36,10 @@ _guardrail_run() {
   declare -F "$fn" >/dev/null && "$fn"
 }
 
+# Core guards only
 _guardrail_load_guard "error_swallow_guard.sh"
-_guardrail_load_guard "skill_injection_guard.sh"
-_guardrail_load_guard "script_pii_guard.sh"
 
 _guardrail_run hook_error_swallow_guard
-_guardrail_run hook_skill_injection_guard
-_guardrail_run hook_script_pii_guard
 
 # --- Load custom post-edit guards ---
 if [ -d "$CUSTOM_DIR" ]; then
