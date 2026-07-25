@@ -67,6 +67,14 @@ cmd_status() {
     echo "Core guards:   not installed"
   fi
 
+  if [ -d "$INSTALL_DIR/guards/pro" ]; then
+    local pro_count
+    pro_count=$(find "$INSTALL_DIR/guards/pro" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
+    echo "Pro guards:    $pro_count"
+  else
+    echo "Pro guards:    not installed (guardrail upgrade --key ...)"
+  fi
+
   if [ -d "$INSTALL_DIR/guards/custom" ]; then
     local custom_count
     custom_count=$(find "$INSTALL_DIR/guards/custom" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
@@ -394,7 +402,18 @@ TESTEOF
 }
 
 cmd_upgrade() {
-  cat << 'EOF'
+  local license_key=""
+  local api_url="${GUARDRAIL_API_URL:-https://license.guardrail.promptandbuild.de}"
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --key) license_key="$2"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+
+  if [ -z "$license_key" ]; then
+    cat << 'EOF'
 GuardRail Pro
 =============
 
@@ -415,10 +434,96 @@ Pricing:
   EUR 20/dev/month
   EUR 5,000 one-time compliance kit
 
-Learn more: https://guardrail.dev/pro
-Contact:   pro@promptandbuild.de
+Usage:
+  guardrail upgrade --key GR-PRO-XXXXXX-XXXXXX-XXXXXX-XXXXXX
+
+Get your key: https://guardrail.promptandbuild.de
+Contact:      frederik@frederikvonderheyden.de
 
 EOF
+    return
+  fi
+
+  local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
+  local PRO_DIR="$INSTALL_DIR/guards/pro"
+
+  echo "GuardRail Pro Upgrade v$VERSION"
+  echo "================================"
+  echo ""
+  echo "Validating license key..."
+
+  local validate_response
+  validate_response=$(curl -sf -X POST "$api_url/api/license/validate" \
+    -H 'Content-Type: application/json' \
+    -d "{\"key\":\"$license_key\"}" 2>&1)
+
+  if [ $? -ne 0 ]; then
+    echo "  ERROR: Could not reach license server."
+    echo "  Check your internet connection and try again."
+    echo ""
+    echo "  If the problem persists: frederik@frederikvonderheyden.de"
+    exit 1
+  fi
+
+  local valid
+  valid=$(echo "$validate_response" | grep -o '"valid":true')
+
+  if [ -z "$valid" ]; then
+    local error
+    error=$(echo "$validate_response" | grep -o '"error":"[^"]*"' | head -1 | cut -d'"' -f4)
+    echo "  ERROR: ${error:-License key not valid}"
+    exit 1
+  fi
+
+  echo "  License valid."
+  echo ""
+  echo "Downloading Pro guards..."
+
+  local tmp_tar
+  tmp_tar=$(mktemp /tmp/guardrail-pro-XXXXXX.tar.gz)
+
+  local http_code
+  http_code=$(curl -sf -o "$tmp_tar" -w '%{http_code}' \
+    "$api_url/api/guards/download" \
+    -H "Authorization: Bearer $license_key")
+
+  if [ "$http_code" != "200" ] || [ ! -s "$tmp_tar" ]; then
+    rm -f "$tmp_tar"
+    echo "  ERROR: Download failed (HTTP $http_code)."
+    echo "  Contact: frederik@frederikvonderheyden.de"
+    exit 1
+  fi
+
+  echo "  Downloaded."
+  echo ""
+  echo "Installing Pro guards..."
+
+  mkdir -p "$PRO_DIR"
+
+  if ! tar -xzf "$tmp_tar" -C "$PRO_DIR" 2>/dev/null; then
+    rm -f "$tmp_tar"
+    echo "  ERROR: Failed to extract guards package."
+    exit 1
+  fi
+
+  rm -f "$tmp_tar"
+
+  local pro_count
+  pro_count=$(find "$PRO_DIR" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
+
+  # Save license key for future validations
+  echo "$license_key" > "$INSTALL_DIR/.license-key"
+  chmod 600 "$INSTALL_DIR/.license-key"
+
+  echo "  $pro_count Pro guards installed to $PRO_DIR"
+  echo ""
+  echo "================================"
+  echo "  GuardRail Pro is active."
+  echo "  Pro guards load automatically on next command."
+  echo ""
+  echo "  Run 'guardrail status' to verify."
+  echo "  Run 'guardrail pentest' to test all guards."
+  echo "================================"
 }
 
 cmd_version() {
@@ -433,7 +538,7 @@ case "${1:-}" in
   status)   shift; cmd_status "$@" ;;
   audit)    shift; cmd_audit "$@" ;;
   new)      shift; cmd_new "$@" ;;
-  upgrade)  cmd_upgrade ;;
+  upgrade)  shift; cmd_upgrade "$@" ;;
   version)  cmd_version ;;
   -v|--version) cmd_version ;;
   -h|--help|"") usage ;;

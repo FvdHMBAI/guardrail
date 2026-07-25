@@ -14,8 +14,21 @@ CMD_SHELL="$CMD"
 ALLOW='{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
 WARNINGS=""
 [ -z "$CMD" ] && { echo "$ALLOW"; exit 0; }
-deny() { local reason="$1"; local rj; rj=$(printf "%s" "$reason" | jq -Rs .); echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":${rj}}}"; exit 0; }
-allow_with_msg() { local m="$1"; local j; j=$(printf "%s" "$m" | jq -Rs .); echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\",\"permissionDecisionReason\":$j}}"; exit 0; }
+deny() {
+  local reason="$1"
+  local rj
+  rj=$(printf "%s" "$reason" | jq -Rs .)
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":${rj}}}"
+  exit 0
+}
+
+allow_with_msg() {
+  local m="$1"
+  local j
+  j=$(printf "%s" "$m" | jq -Rs .)
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"allow\",\"permissionDecisionReason\":$j}}"
+  exit 0
+}
 warn() { local m="$1"; [ -z "$WARNINGS" ] && WARNINGS="$m" || WARNINGS="$WARNINGS | $m"; }
 _guardrail_load_guard() { local g="$1"; [ -f "$GUARDS_DIR/$g" ] && source "$GUARDS_DIR/$g"; }
 _guardrail_run() { local f="$1"; declare -F "$f" >/dev/null && "$f"; }
@@ -50,5 +63,22 @@ case "$CMD" in
   *"curl"*) _guardrail_load_guard "curl_exitcode_guard.sh"; _guardrail_run hook_curl_exitcode_guard;;
   *"crontab"*|*"cron"*) _guardrail_load_guard "cron_delete_guard.sh"; _guardrail_run hook_cron_delete_guard;;
 esac
-if [ -d "$CUSTOM_DIR" ]; then for cg in "$CUSTOM_DIR"/*.sh; do [ -f "$cg" ] || continue; source "$cg"; lfn="hook_$(basename "$cg" .sh)"; declare -F "$lfn" >/dev/null && "$lfn"; done; fi
+if [ -d "$CUSTOM_DIR" ]; then
+  for cg in "$CUSTOM_DIR"/*.sh; do
+    [ -f "$cg" ] || continue
+    source "$cg"
+    lfn="hook_$(basename "$cg" .sh)"
+    declare -F "$lfn" >/dev/null && "$lfn"
+  done
+fi
+
+PRO_DIR="${SCRIPT_DIR}/../guards/pro"
+if [ -d "$PRO_DIR" ]; then
+  for pg in "$PRO_DIR"/*.sh; do
+    [ -f "$pg" ] || continue
+    source "$pg"
+    pfn="hook_$(basename "$pg" .sh)"
+    declare -F "$pfn" >/dev/null && "$pfn"
+  done
+fi
 if [ -n "$WARNINGS" ]; then allow_with_msg "$WARNINGS"; else echo "$ALLOW"; exit 0; fi

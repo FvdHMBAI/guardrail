@@ -23,12 +23,12 @@ hook_destructive_path_guard() {
   fi
 
   if echo "$CMD_SHELL" | grep -qE "(rm[[:space:]]+-[a-zA-Z]*r[a-zA-Z]*|rm[[:space:]]+--recursive)[[:space:]]+.*(${PROTECTED_PATHS})"; then
-    if [ -f ${GUARDRAIL_STATE_DIR:-/tmp/guardrail}/rm-approved ]; then
-      rm -f ${GUARDRAIL_STATE_DIR:-/tmp/guardrail}/rm-approved 2>/dev/null
-      echo "| $(date +%Y-%m-%d\ %H:%M) | Path-Guard | rm -r with approval | $SESSION_ID | $(echo "$CMD_SHELL" | head -c 80 | tr '|' '/') | approved |" >> ${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log} 2>/dev/null
+    if [ -f "${GUARDRAIL_STATE_DIR:-/tmp/guardrail}/rm-approved" ]; then
+      rm -f "${GUARDRAIL_STATE_DIR:-/tmp/guardrail}/rm-approved" 2>/dev/null
+      echo "| $(date +%Y-%m-%d\ %H:%M) | Path-Guard | rm -r with approval | $SESSION_ID | $(echo "$CMD_SHELL" | head -c 80 | tr '|' '/') | approved |" >> "${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log}" 2>/dev/null
       return 0
     fi
-    echo "| $(date +%Y-%m-%d\ %H:%M) | Path-Guard | rm -r on protected path blocked | $SESSION_ID | $(echo "$CMD_SHELL" | head -c 80 | tr '|' '/') | blocked |" >> ${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log} 2>/dev/null
+    echo "| $(date +%Y-%m-%d\ %H:%M) | Path-Guard | rm -r on protected path blocked | $SESSION_ID | $(echo "$CMD_SHELL" | head -c 80 | tr '|' '/') | blocked |" >> "${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log}" 2>/dev/null
     deny "PATH-GUARD: rm -r/--recursive on protected path blocked (/opt, /home/developer, /etc, /var/lib/docker, /mnt, .claude, .ssh). Admin approval: ! touch ${GUARDRAIL_STATE_DIR:-/tmp/guardrail}/rm-approved"
   fi
 

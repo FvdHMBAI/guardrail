@@ -83,7 +83,7 @@ GUARDRAIL_PROTECTED_TABLES="auth.users profiles members"
 GUARDRAIL_PROTECTED_BRANCHES="main master production"
 
 # Critical services (blocked from kill/stop)
-GUARDRAIL_PROTECTED_SERVICES="sshd nginx postgres docker"
+GUARDRAIL_CRITICAL_SERVICES="docker sshd ssh traefik postgresql postgres nginx"
 
 # Strict mode (true = block, false = warn only)
 GUARDRAIL_STRICT_MODE="true"

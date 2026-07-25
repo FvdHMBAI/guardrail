@@ -239,7 +239,7 @@
     }
     .dark-section .sec-title { color: #F0EDE8; }
     .dark-section .sec-desc { color: var(--dark-dim); }
-    .dark-section a { color: var(--accent); }
+    .dark-section a:not(.btn-accent) { color: var(--accent); }
 
     /* — Pro — */
     .pro-grid {
@@ -572,12 +572,12 @@
       <div class="price-card">
         <div class="amount">&euro;20 <span>/dev/month</span></div>
         <div class="label">Full guard suite, PEN-test framework, priority support</div>
-        <a href="mailto:pro@promptandbuild.de" class="btn-accent">Contact for Pro</a>
+        <a href="https://buy.stripe.com/4gMbJ22PB9Ro72O6Fses000" class="btn-accent" id="checkout-pro">Subscribe to Pro</a>
       </div>
       <div class="price-card">
         <div class="amount">&euro;5.000 <span>one-time</span></div>
         <div class="label">Compliance kit: audit reports, article mapping, PDF export</div>
-        <a href="mailto:pro@promptandbuild.de" class="btn-accent">Contact for compliance</a>
+        <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Compliance%20Kit" class="btn-accent">Request compliance kit</a>
       </div>
     </div>
   </div>
@@ -629,7 +629,7 @@
     <div class="cta-links">
       <a href="https://github.com/FvdHMBAI/guardrail">Documentation</a>
       <a href="https://github.com/FvdHMBAI/guardrail/issues">Report a bug</a>
-      <a href="mailto:pro@promptandbuild.de">Contact</a>
+      <a href="mailto:frederik@frederikvonderheyden.de">Contact</a>
     </div>
   </div>
 </section>

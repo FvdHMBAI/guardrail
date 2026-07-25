@@ -51,6 +51,17 @@ if [ -d "$CUSTOM_DIR" ]; then
   done
 fi
 
+# --- Load pro post-edit guards ---
+PRO_DIR="$SCRIPT_DIR/../guards/pro"
+if [ -d "$PRO_DIR" ]; then
+  for pro_guard in "$PRO_DIR"/edit_*.sh; do
+    [ -f "$pro_guard" ] || continue
+    source "$pro_guard"
+    pro_fn="hook_$(basename "$pro_guard" .sh)"
+    declare -F "$pro_fn" >/dev/null && "$pro_fn"
+  done
+fi
+
 # Output collected context
 if [ ${#CONTEXT_PARTS[@]} -gt 0 ]; then
   COMBINED=""
