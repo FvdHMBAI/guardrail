@@ -32,36 +32,23 @@ allow_with_msg() {
 warn() { local m="$1"; [ -z "$WARNINGS" ] && WARNINGS="$m" || WARNINGS="$WARNINGS | $m"; }
 _guardrail_load_guard() { local g="$1"; [ -f "$GUARDS_DIR/$g" ] && source "$GUARDS_DIR/$g"; }
 _guardrail_run() { local f="$1"; declare -F "$f" >/dev/null && "$f"; }
+# Core guards (MIT)
 _guardrail_load_guard "main_push_guard.sh"
-_guardrail_load_guard "tabu_gate.sh"
-_guardrail_load_guard "pii_gate.sh"
-_guardrail_load_guard "secret_output_guard.sh"
+_guardrail_load_guard "basic_pii_gate.sh"
+_guardrail_load_guard "basic_secret_detector.sh"
 _guardrail_load_guard "destructive_path_guard.sh"
 _guardrail_load_guard "firewall_flush_guard.sh"
 _guardrail_load_guard "service_protection_guard.sh"
-_guardrail_load_guard "api_key_guard.sh"
-_guardrail_load_guard "anti_self_bypass_guard.sh"
-_guardrail_load_guard "gate_file_guard.sh"
-_guardrail_load_guard "agent_control_policy_guard.sh"
 _guardrail_run hook_main_push_guard
-_guardrail_run hook_tabu_gate
-_guardrail_run hook_pii_gate
-_guardrail_run hook_secret_output_guard
+_guardrail_run hook_basic_pii_gate
+_guardrail_run hook_basic_secret_detector
 _guardrail_run hook_destructive_path_guard
 _guardrail_run hook_firewall_flush_guard
 _guardrail_run hook_service_protection_guard
-_guardrail_run hook_api_key_guard
-_guardrail_run hook_anti_self_bypass_guard
-_guardrail_run hook_gate_file_guard
-_guardrail_run hook_agent_control_policy_guard
 case "$CMD" in
   *"psql"*|*"docker exec"*psql*)
     _guardrail_load_guard "mass_update_guard.sh"; _guardrail_run hook_mass_update_guard
-    _guardrail_load_guard "db_backup_gate.sh"; _guardrail_run hook_db_backup_gate
     ;;
-  *"npm"*) _guardrail_load_guard "npm_audit_guard.sh"; _guardrail_run hook_npm_audit_guard;;
-  *"curl"*) _guardrail_load_guard "curl_exitcode_guard.sh"; _guardrail_run hook_curl_exitcode_guard;;
-  *"crontab"*|*"cron"*) _guardrail_load_guard "cron_delete_guard.sh"; _guardrail_run hook_cron_delete_guard;;
 esac
 if [ -d "$CUSTOM_DIR" ]; then
   for cg in "$CUSTOM_DIR"/*.sh; do
@@ -74,11 +61,14 @@ fi
 
 PRO_DIR="${SCRIPT_DIR}/../guards/pro"
 if [ -d "$PRO_DIR" ]; then
-  for pg in "$PRO_DIR"/*.sh; do
-    [ -f "$pg" ] || continue
-    source "$pg"
-    pfn="hook_$(basename "$pg" .sh)"
-    declare -F "$pfn" >/dev/null && "$pfn"
-  done
+  source "$LIB_DIR/guardrail-license.sh"
+  if _guardrail_check_pro_license; then
+    for pg in "$PRO_DIR"/*.sh; do
+      [ -f "$pg" ] || continue
+      source "$pg"
+      pfn="hook_$(basename "$pg" .sh)"
+      declare -F "$pfn" >/dev/null && "$pfn"
+    done
+  fi
 fi
 if [ -n "$WARNINGS" ]; then allow_with_msg "$WARNINGS"; else echo "$ALLOW"; exit 0; fi

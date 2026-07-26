@@ -10,7 +10,7 @@ CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 INSTALL_DIR="$CLAUDE_DIR/hooks/guardrail"
 
-echo "GuardRail Installer v0.1.0"
+echo "GuardRail Installer v0.2.1"
 echo "========================="
 echo ""
 

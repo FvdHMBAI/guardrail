@@ -56,12 +56,15 @@ fi
 # --- Load pro post-bash guards ---
 PRO_DIR="$SCRIPT_DIR/../guards/pro"
 if [ -d "$PRO_DIR" ]; then
-  for pro_guard in "$PRO_DIR"/post_*.sh; do
-    [ -f "$pro_guard" ] || continue
-    source "$pro_guard"
-    pro_fn="hook_$(basename "$pro_guard" .sh)"
-    declare -F "$pro_fn" >/dev/null && "$pro_fn"
-  done
+  source "$LIB_DIR/guardrail-license.sh"
+  if _guardrail_check_pro_license; then
+    for pro_guard in "$PRO_DIR"/post_*.sh; do
+      [ -f "$pro_guard" ] || continue
+      source "$pro_guard"
+      pro_fn="hook_$(basename "$pro_guard" .sh)"
+      declare -F "$pro_fn" >/dev/null && "$pro_fn"
+    done
+  fi
 fi
 
 # Output collected context

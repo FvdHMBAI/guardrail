@@ -20,9 +20,6 @@ GUARDRAIL_HOME="${GUARDRAIL_HOME:-$HOME/.guardrail}"
 GUARDRAIL_CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
 
 # --- Guards ---
-# Comma-separated list of enabled core guards (empty = all core guards)
-GUARDRAIL_ENABLED_GUARDS="${GUARDRAIL_ENABLED_GUARDS:-}"
-
 # Directory for custom guards (loaded after core guards)
 GUARDRAIL_CUSTOM_GUARDS_DIR="${GUARDRAIL_CUSTOM_GUARDS_DIR:-./custom-guards}"
 

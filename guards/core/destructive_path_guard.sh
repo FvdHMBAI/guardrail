@@ -7,29 +7,32 @@
 # Shared fns: deny()
 
 hook_destructive_path_guard() {
-  local PROTECTED_PATHS='/opt\b|/home/developer\b|/etc\b|/var/lib/docker\b|/var/lib/postgresql\b|/mnt\b|/root/\.claude|/root/\.ssh'
+  local _paths_re
+  _paths_re=$(_guardrail_list_to_regex_raw "$GUARDRAIL_PROTECTED_PATHS")
+  local _state="${GUARDRAIL_STATE_DIR:-/tmp/guardrail}"
 
   local IS_RM_RECURSIVE=false
   echo "$CMD_SHELL" | grep -qE 'rm[[:space:]]+-[a-zA-Z]*r' && IS_RM_RECURSIVE=true
   echo "$CMD_SHELL" | grep -qE 'rm[[:space:]]+--recursive' && IS_RM_RECURSIVE=true
 
   # find -delete on protected paths
-  if echo "$CMD_SHELL" | grep -qE "find[[:space:]]+(${PROTECTED_PATHS})[^|;]*-delete"; then
-    deny "PATH-GUARD: find -delete on protected path is blocked. Admin approval: ! touch ${GUARDRAIL_STATE_DIR:-/tmp/guardrail}/rm-approved"
+  if echo "$CMD_SHELL" | grep -qE "find[[:space:]]+(${_paths_re})[^|;]*-delete"; then
+    guardrail_audit "Path-Guard" "find -delete on protected path blocked" "$(echo "$CMD_SHELL" | head -c 60)"
+    deny "PATH-GUARD: find -delete on protected path is blocked. Admin approval: ! touch $_state/rm-approved"
   fi
 
   if [ "$IS_RM_RECURSIVE" != "true" ]; then
     return 0
   fi
 
-  if echo "$CMD_SHELL" | grep -qE "(rm[[:space:]]+-[a-zA-Z]*r[a-zA-Z]*|rm[[:space:]]+--recursive)[[:space:]]+.*(${PROTECTED_PATHS})"; then
-    if [ -f "${GUARDRAIL_STATE_DIR:-/tmp/guardrail}/rm-approved" ]; then
-      rm -f "${GUARDRAIL_STATE_DIR:-/tmp/guardrail}/rm-approved" 2>/dev/null
-      echo "| $(date +%Y-%m-%d\ %H:%M) | Path-Guard | rm -r with approval | $SESSION_ID | $(echo "$CMD_SHELL" | head -c 80 | tr '|' '/') | approved |" >> "${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log}" 2>/dev/null
+  if echo "$CMD_SHELL" | grep -qE "(rm[[:space:]]+-[a-zA-Z]*r[a-zA-Z]*|rm[[:space:]]+--recursive)[[:space:]]+.*(${_paths_re})"; then
+    if [ -f "$_state/rm-approved" ]; then
+      rm -f "$_state/rm-approved" 2>/dev/null
+      guardrail_audit "Path-Guard" "rm -r with approval" "$(echo "$CMD_SHELL" | head -c 60)" "approved"
       return 0
     fi
-    echo "| $(date +%Y-%m-%d\ %H:%M) | Path-Guard | rm -r on protected path blocked | $SESSION_ID | $(echo "$CMD_SHELL" | head -c 80 | tr '|' '/') | blocked |" >> "${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log}" 2>/dev/null
-    deny "PATH-GUARD: rm -r/--recursive on protected path blocked (/opt, /home/developer, /etc, /var/lib/docker, /mnt, .claude, .ssh). Admin approval: ! touch ${GUARDRAIL_STATE_DIR:-/tmp/guardrail}/rm-approved"
+    guardrail_audit "Path-Guard" "rm -r on protected path blocked" "$(echo "$CMD_SHELL" | head -c 60)"
+    deny "PATH-GUARD: rm -r/--recursive on protected path blocked. Admin approval: ! touch $_state/rm-approved"
   fi
 
   if echo "$CMD_SHELL" | grep -qE '(rm[[:space:]]+-[a-zA-Z]*r[a-zA-Z]*|rm[[:space:]]+--recursive)[[:space:]]+(/[[:space:]]|/$|/\*|/\.)'; then
