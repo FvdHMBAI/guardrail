@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-VERSION="0.2.1"
+VERSION="0.2.2"
 REAL_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")/.." && pwd)"
 
@@ -123,7 +123,7 @@ Includes:
   - Evidence trail with timestamps
 
 Available with GuardRail Pro subscription.
-Learn more: https://guardrail.dev/pro
+Learn more: https://guardrail.promptandbuild.de
 
 COMPEOF
         return ;;
@@ -194,7 +194,7 @@ Pro PEN-Test includes:
   - JSON compliance report for auditors
 
 Available with GuardRail Pro subscription.
-Learn more: https://guardrail.dev/pro
+Learn more: https://guardrail.promptandbuild.de
 
 PROEOF
     return

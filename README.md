@@ -3,7 +3,7 @@
 Pre-execution security guards for AI coding agents.
 Open source. Production-grade patterns. EU AI Act ready.
 
-**Works with:** Claude Code, Cursor, GitHub Copilot, Windsurf
+**Works with:** Claude Code (native hook support). Cursor, Copilot, Windsurf support planned.
 
 ## The Problem
 
@@ -69,7 +69,7 @@ Plus: PEN-test framework, EU AI Act compliance reports (PDF), audit trail.
 
 **Pricing:** EUR 20/dev/month | EUR 5,000 compliance kit
 
-Learn more: guardrail.dev/pro
+Learn more: https://guardrail.promptandbuild.de
 
 ## Configuration
 

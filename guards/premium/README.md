@@ -40,4 +40,4 @@ attack vectors that basic guards miss.
 | Enterprise | Custom |
 | Compliance Kit | EUR 5,000 one-time |
 
-Learn more: https://guardrail.dev/pro
+Learn more: https://guardrail.promptandbuild.de
