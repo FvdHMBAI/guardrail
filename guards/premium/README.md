@@ -25,19 +25,27 @@ attack vectors that basic guards miss.
 | `self_correction_loop_guard` | Detects and breaks infinite retry loops |
 | `...and 20+ more` | Deploy verification, schema checks, auth guards |
 
+## Data Protection & Compliance
+
+| Guard | Protects against |
+|-------|------------------|
+| `post_pii_shield_guard` | Personal data in agent outputs (10 EU countries, 3-tier classification) |
+| `post_audit_trail_guard` | Missing audit evidence (structured JSONL logging of all agent actions) |
+
 ## Also included in Pro
 
+- **PII Shield**: Real-time PII scanning via GuardRail PII Shield API (IBAN, tax IDs, names, addresses across DE/AT/CH/SE/FR/NL/ES/IT/PL/PT/BE)
+- **Audit Trail**: Structured JSONL audit log with daily rotation and configurable retention
+- **Compliance Reporter**: `guardrail compliance-report` with EU AI Act article mapping
 - **PEN Test Framework**: 50+ attack patterns from real incidents
-- **EU AI Act Compliance Mapping**: Guard-to-article matrix
-- **Audit Report Generator**: PDF compliance reports
 - **Priority Support**: Response within 24h
 
 ## Pricing
 
 | Plan | Price |
 |------|-------|
-| Pro | EUR 20/dev/month |
+| Pro | EUR 29/dev/month |
 | Enterprise | Custom |
-| Compliance Kit | EUR 5,000 one-time |
+| Compliance Kit | EUR 4,900 one-time |
 
 Learn more: https://guardrail.promptandbuild.de
