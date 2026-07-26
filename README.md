@@ -1,75 +1,64 @@
 # GuardRail
 
 Pre-execution security guards for AI coding agents.
-Open source. Production-grade patterns. EU AI Act ready.
 
-**Works with:** Claude Code (native hook support). Cursor, Copilot, Windsurf support planned.
+<p align="center">
+  <img src="docs/demo.svg" alt="GuardRail demo" width="680">
+</p>
 
-## The Problem
-
-Your AI coding agent runs commands on your machine. It can delete files, push to
-production, leak secrets, and drop database tables. Most tools catch problems
-*after* they happen. GuardRail catches them *before*.
-
-**EU AI Act enforcement starts August 2, 2026.** If you use AI coding agents in
-the EU, you need governance. GuardRail gives you that in one command.
-
-## Quick Start
+One command. Zero config. Every command your AI agent runs is guarded before it executes.
 
 ```bash
 npx guardrail-agent init
 ```
 
-That's it. 10 security guards are now active.
+Derived from **100+ production guards running across 15 applications**.
+These are the patterns that actually stop incidents.
 
-## What It Does
+## Why
 
-Every command your AI agent runs passes through GuardRail first.
-Dangerous operations are blocked before they execute, not after.
+Your AI coding agent runs commands on your machine. It can delete files, push
+to production, leak secrets, and drop database tables. Most tools catch
+problems *after* they happen. GuardRail catches them *before*.
 
-```
-Agent: "rm -rf /etc"           -> BLOCKED (destructive path)
-Agent: "git push origin main"  -> BLOCKED (protected branch)
-Agent: "env"                   -> BLOCKED (secret exposure)
-Agent: "DELETE FROM users"     -> BLOCKED (mass update)
-Agent: "iptables -F"           -> BLOCKED (firewall flush)
-```
+Real example from our production system: an AI agent ran
+`git reset --hard` during a debugging session, wiping 3 hours of uncommitted
+work. Another tried `docker exec postgres psql -c "DELETE FROM profiles"` --
+no WHERE clause. Both blocked by GuardRail before they executed.
 
-## Core Guards (MIT)
+## 10 Core Guards (MIT, free forever)
 
-10 guards that cover the most common risks:
+| Guard | What it stops |
+|---|---|
+| `main_push_guard` | Force push, direct push to main/master, `reset --hard`, `clean -f` |
+| `basic_pii_gate` | `env`, `printenv`, `docker inspect`, `/proc/environ` -- anything that dumps secrets |
+| `basic_secret_detector` | `curl webhook.site`, sending `$API_KEY` via POST, base64 exfiltration |
+| `destructive_path_guard` | `rm -rf` on /home, /etc, /var, /opt -- configurable protected paths |
+| `firewall_flush_guard` | `iptables -F`, `ufw disable`, `nft flush ruleset` |
+| `service_protection_guard` | `systemctl stop docker`, `killall postgres`, `pkill sshd` |
+| `mass_update_guard` | `UPDATE profiles SET ...` or `DELETE FROM users` without WHERE clause |
+| `env_dump_detector` | Catches environment dumps in command *output* (even from obfuscated commands) |
+| `basic_injection_scanner` | Detects "ignore previous instructions" and role-override injections in output |
+| `error_swallow_guard` | Flags empty catch blocks in payment/webhook/cron code |
 
-| Guard | Type | Protects Against |
-|---|---|---|
-| `main_push_guard` | pre-bash | Direct push to main/master, force push, reset --hard |
-| `basic_pii_gate` | pre-bash | Environment dumps via env/printenv/docker inspect |
-| `basic_secret_detector` | pre-bash | Secret exfiltration to known malicious domains |
-| `destructive_path_guard` | pre-bash | rm -rf on system paths (/etc, /usr, /var, /home) |
-| `firewall_flush_guard` | pre-bash | iptables flush, ufw disable/reset |
-| `service_protection_guard` | pre-bash | Killing critical services (sshd, docker, postgres) |
-| `mass_update_guard` | pre-bash | UPDATE/DELETE without WHERE clause |
-| `env_dump_detector` | post-bash | Full environment variable dumps in output |
-| `basic_injection_scanner` | post-bash | Prompt injection patterns in command output |
-| `error_swallow_guard` | post-edit | Empty catch blocks in critical code paths |
+Every guard is configurable. Every block is logged. Every log has a timestamp.
 
 ## GuardRail Pro
 
-40+ advanced guards derived from real production incidents. Covers attack vectors
-that basic guards miss.
+48 advanced guards from real production incidents. The attacks that basic
+pattern matching misses.
 
-| Category | Examples |
+| What Pro catches | Why it matters |
 |---|---|
-| Advanced PII | 15+ leak vectors beyond env/printenv, script content analysis |
-| Injection Defense | Multi-step attack detection, semantic injection, skill file poisoning |
-| Supply Chain | npm audit integration, license compliance checks |
-| Infrastructure | Config file protection, gate file mechanisms, cron job safety |
-| Agent Control | Self-bypass prevention, autonomy boundaries, message approval |
+| Script content analysis | Agent writes payload to file, then runs the file -- bypasses command-line guards |
+| Multi-step attack detection | Credential scan followed by network exfiltration -- blocked on the second step |
+| Self-bypass prevention | Agent tries to delete its own gate files or create approval tokens |
+| Supply chain audit | `npm install` with known-vulnerable or restrictively-licensed packages |
+| EU AI Act compliance | Guard-to-article mapping, PDF audit reports for regulators |
 
-Plus: PEN-test framework, EU AI Act compliance reports (PDF), audit trail.
+Plus: PEN-test framework (50+ attack patterns), priority support, compliance kit.
 
-**Pricing:** EUR 20/dev/month | EUR 5,000 compliance kit
-
-Learn more: https://guardrail.promptandbuild.de
+**EUR 20/dev/month** | [Get started](https://guardrail.promptandbuild.de)
 
 ## Configuration
 
@@ -82,8 +71,8 @@ GUARDRAIL_PROTECTED_TABLES="auth.users profiles members"
 # Protected git branches
 GUARDRAIL_PROTECTED_BRANCHES="main master production"
 
-# Critical services (blocked from kill/stop)
-GUARDRAIL_CRITICAL_SERVICES="docker sshd ssh traefik postgresql postgres nginx"
+# Critical services
+GUARDRAIL_CRITICAL_SERVICES="docker sshd traefik postgresql nginx"
 
 # Strict mode (true = block, false = warn only)
 GUARDRAIL_STRICT_MODE="true"
@@ -91,93 +80,89 @@ GUARDRAIL_STRICT_MODE="true"
 
 ## Custom Guards
 
-Add your own guards to `~/.claude/hooks/guardrail/guards/custom/`:
+Create your own in `~/.claude/hooks/guardrail/guards/custom/`:
 
 ```bash
-#!/bin/bash
-# Custom guard: block_dangerous_pattern
-# License: MIT
-
-hook_block_dangerous_pattern() {
-  if echo "$CMD" | grep -q "dangerous-pattern"; then
-    deny "BLOCKED: Explain why this is blocked."
-  fi
-}
+guardrail new block_npm_global
 ```
 
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the full guard-writing guide.
+This generates a guard template with a matching test file. Edit the pattern,
+run the test, done. The guard loads automatically on the next command.
 
 ## CLI
 
-```bash
-guardrail init             # Install guards into Claude Code
-guardrail test             # Run regression tests (41 tests)
-guardrail status           # Show active guards and recent activity
-guardrail audit            # Generate audit report
-guardrail audit --days 30  # Last 30 days
-guardrail upgrade          # Learn about GuardRail Pro
+```
+$ guardrail status
+
+  GuardRail v0.2.2
+
+  10 core guards active
+  0 pro guards
+
+  Audit: 47 blocked / 312 total
+
+$ guardrail pentest
+
+  Phase 3: Attack Simulation
+  x BLOCKED push to main
+  x BLOCKED force push
+  + ALLOWED push develop (FP)
+  x BLOCKED rm -rf /etc
+  + ALLOWED rm single file (FP)
+
+  All 22 tests passed.
 ```
 
-## EU AI Act Compliance
+## How It Works
 
-GuardRail helps meet key requirements of the EU AI Act (Regulation 2024/1689):
+```
+AI Agent (Claude Code)
+      |
+      v
+[Pre-Bash Dispatcher]     Before the command runs
+      |
+   [Guards] ------------- BLOCKED  (command never executes)
+      |                   WARNED   (executes with context)
+      v
+[Command Executes]
+      |
+      v
+[Post-Bash Dispatcher]    After the command runs
+      |
+   [Output Scanners] ----- Injection detection, env dump detection
+```
 
-| Article | Requirement | GuardRail Solution |
+Guards are bash functions. No runtime dependencies beyond bash and jq.
+Works on Linux and macOS. Installs in 5 seconds.
+
+## EU AI Act
+
+EU AI Act enforcement starts **August 2, 2026**. If you use AI coding agents
+in the EU, you need governance tooling. GuardRail provides:
+
+| Article | Requirement | How GuardRail helps |
 |---|---|---|
 | Art. 9 | Risk management | Guard classification, PEN-test framework |
-| Art. 10 | Data governance | PII gates, secret output protection |
-| Art. 12 | Record-keeping | Audit log with timestamps |
-| Art. 14 | Human oversight | deny() gates, approval workflows |
-| Art. 15 | Accuracy & robustness | Injection defense, regression tests |
+| Art. 14 | Human oversight | deny() gates with admin approval workflows |
+| Art. 12 | Record-keeping | Timestamped audit log, exportable |
 
-Full compliance mapping available in GuardRail Pro.
+Full compliance mapping with PDF export available in GuardRail Pro.
 
-## Architecture
+## Works with
 
-```
-AI Coding Agent (Claude Code / Cursor / Copilot)
-        |
-        v
-  [Pre-Bash Dispatcher]    <-- Before command runs
-        |
-  [Guards] ─────────────── DENY  (blocks execution)
-        |                   WARN  (adds context)
-        v
-  [Command Executes]
-        |
-        v
-  [Post-Bash Dispatcher]   <-- After command runs
-        |
-  [Output Scanners] ────── Context (injection, env dumps)
-```
+**Claude Code** -- native hook support, zero config.
+Cursor, GitHub Copilot, Windsurf support planned.
 
 ## Requirements
 
-- bash 4+
-- jq
-- Claude Code (or compatible AI coding tool with hook support)
+- bash 4+, jq
 - Linux or macOS
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
 
-## Security
-
-See [SECURITY.md](SECURITY.md) for vulnerability reporting.
-
-## Contributing
-
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
-
 ---
 
-Built by [Prompt & Build](https://promptandbuild.de). Derived from
-production patterns running 100+ guards across 15 applications.
-
-## Disclaimer
-
-GuardRail reduces risk but does not guarantee complete protection. Pattern-based
-guards cannot catch every possible attack vector. GuardRail is not a substitute
-for security audits, penetration testing, or compliance certification. Use it as
-one layer in a defense-in-depth strategy.
+Built by [Prompt & Build](https://promptandbuild.de).
+Patterns extracted from production systems running 100+ guards across 15 applications since 2025.

@@ -30,6 +30,18 @@ GUARDRAIL_MAX_FILE_SCAN="${GUARDRAIL_MAX_FILE_SCAN:-5}"
 # Ensure directories exist
 mkdir -p "$GUARDRAIL_LOG_DIR" "$GUARDRAIL_STATE_DIR" 2>/dev/null
 
+# --- Colors (respects NO_COLOR, non-TTY) ---
+if [ -z "${NO_COLOR:-}" ] && [ -t 1 ]; then
+  _GR_RED=$'\033[0;31m'
+  _GR_GREEN=$'\033[0;32m'
+  _GR_YELLOW=$'\033[0;33m'
+  _GR_BOLD=$'\033[1m'
+  _GR_DIM=$'\033[2m'
+  _GR_RESET=$'\033[0m'
+else
+  _GR_RED="" _GR_GREEN="" _GR_YELLOW="" _GR_BOLD="" _GR_DIM="" _GR_RESET=""
+fi
+
 # --- Shared functions ---
 
 guardrail_log() {

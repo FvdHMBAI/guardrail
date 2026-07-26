@@ -5,9 +5,16 @@
 
 set -euo pipefail
 
-VERSION="0.2.2"
+VERSION="0.2.3"
 REAL_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")/.." && pwd)"
+
+# Colors
+if [ -z "${NO_COLOR:-}" ] && [ -t 1 ]; then
+  R=$'\033[0;31m' G=$'\033[0;32m' Y=$'\033[0;33m' B=$'\033[1m' D=$'\033[2m' Z=$'\033[0m'
+else
+  R="" G="" Y="" B="" D="" Z=""
+fi
 
 usage() {
   cat << EOF
@@ -54,52 +61,53 @@ cmd_test() {
 cmd_status() {
   local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
 
-  echo "GuardRail v$VERSION Status"
-  echo "========================"
+  echo ""
+  echo "  ${B}GuardRail${Z} ${D}v$VERSION${Z}"
   echo ""
 
-  # Count guards
   if [ -d "$INSTALL_DIR/guards/core" ]; then
     local core_count
     core_count=$(find "$INSTALL_DIR/guards/core" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
-    echo "Core guards:   $core_count"
+    echo "  ${G}$core_count${Z} core guards active"
   else
-    echo "Core guards:   not installed"
+    echo "  ${R}0${Z} core guards ${D}(run guardrail init)${Z}"
   fi
 
   if [ -d "$INSTALL_DIR/guards/pro" ]; then
     local pro_count
     pro_count=$(find "$INSTALL_DIR/guards/pro" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
-    echo "Pro guards:    $pro_count"
+    [ "$pro_count" -gt 0 ] && echo "  ${G}$pro_count${Z} pro guards active" || echo "  ${D}0${Z} pro guards"
   else
-    echo "Pro guards:    not installed (guardrail upgrade --key ...)"
+    echo "  ${D}0${Z} pro guards ${D}(guardrail upgrade --key ...)${Z}"
   fi
 
   if [ -d "$INSTALL_DIR/guards/custom" ]; then
     local custom_count
     custom_count=$(find "$INSTALL_DIR/guards/custom" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
-    echo "Custom guards: $custom_count"
+    [ "$custom_count" -gt 0 ] && echo "  ${G}$custom_count${Z} custom guards"
   fi
 
   echo ""
 
-  # Show recent audit activity
   local AUDIT_LOG="${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log}"
   if [ -f "$AUDIT_LOG" ]; then
     local total blocked
     total=$(wc -l < "$AUDIT_LOG" | tr -d ' ')
     blocked=$(grep -c "blocked" "$AUDIT_LOG" 2>/dev/null || echo 0)
-    echo "Audit log: $AUDIT_LOG"
-    echo "  Total events:  $total"
-    echo "  Blocked:       $blocked"
+    echo "  ${D}Audit:${Z} ${B}$blocked${Z} blocked / $total total"
     echo ""
-    echo "Last 5 events:"
+    echo "  ${D}Recent:${Z}"
     tail -5 "$AUDIT_LOG" 2>/dev/null | while IFS= read -r line; do
-      echo "  $line"
+      if echo "$line" | grep -q "blocked"; then
+        echo "  ${R}x${Z} $line"
+      else
+        echo "  ${G}+${Z} $line"
+      fi
     done
   else
-    echo "No audit log found."
+    echo "  ${D}No audit events yet.${Z}"
   fi
+  echo ""
 }
 
 cmd_audit() {
@@ -205,14 +213,14 @@ PROEOF
   local LIB_DIR="$INSTALL_DIR/lib"
   local P=0 F=0
 
-  echo "GuardRail PEN-Test v$VERSION"
-  echo "==========================="
+  echo ""
+  echo "  ${B}GuardRail PEN-Test${Z} ${D}v$VERSION${Z}"
   echo ""
 
   # Phase 1: Syntax check
-  echo "Phase 1: Syntax Check"
+  echo "  ${D}Phase 1: Syntax${Z}"
   if [ ! -d "$GUARDS_DIR" ]; then
-    echo "  ERROR: Guards not installed. Run 'guardrail init' first."
+    echo "  ${R}ERROR${Z} Guards not installed. Run ${B}guardrail init${Z} first."
     exit 1
   fi
   for g in "$GUARDS_DIR"/*.sh; do
@@ -220,26 +228,26 @@ PROEOF
     if bash -n "$g" 2>/dev/null; then
       P=$((P+1))
     else
-      F=$((F+1)); echo "  FAIL: $(basename "$g") has syntax errors"
+      F=$((F+1)); echo "  ${R}x${Z} $(basename "$g") syntax error"
     fi
   done
-  echo "  $P guards passed syntax check"
+  echo "  ${G}+${Z} $P guards passed syntax check"
   echo ""
 
   # Phase 2: Dispatcher check
-  echo "Phase 2: Dispatcher Wiring"
+  echo "  ${D}Phase 2: Dispatchers${Z}"
   for d in "$INSTALL_DIR/dispatchers"/*.sh; do
     [ -f "$d" ] || continue
     if bash -n "$d" 2>/dev/null; then
-      P=$((P+1)); echo "  OK: $(basename "$d")"
+      P=$((P+1)); echo "  ${G}+${Z} $(basename "$d")"
     else
-      F=$((F+1)); echo "  FAIL: $(basename "$d") has syntax errors"
+      F=$((F+1)); echo "  ${R}x${Z} $(basename "$d") syntax error"
     fi
   done
   echo ""
 
   # Phase 3: Guard simulation
-  echo "Phase 3: Security Gate Simulation"
+  echo "  ${D}Phase 3: Attack Simulation${Z}"
 
   _pen_pre() {
     local gf="$1" fn="$2" cmd="$3"
@@ -256,11 +264,11 @@ PROEOF
   _pen_check() {
     local name="$1" expect="$2" result="$3" desc="$4"
     if [ "$expect" = "DENY" ] && [ "$result" = "DENY" ]; then
-      P=$((P+1))
+      P=$((P+1)); echo "  ${R}x BLOCKED${Z} $desc"
     elif [ "$expect" = "PASS" ] && [ "$result" != "DENY" ]; then
-      P=$((P+1))
+      P=$((P+1)); echo "  ${G}+ ALLOWED${Z} ${D}$desc${Z}"
     else
-      F=$((F+1)); echo "  FAIL: [$name] $desc (expected $expect, got $result)"
+      F=$((F+1)); echo "  ${Y}! FAIL${Z}   $desc ${D}(expected $expect, got $result)${Z}"
     fi
   }
 
@@ -296,19 +304,16 @@ PROEOF
   fi
 
   echo ""
-  echo "==========================="
-  echo "  Passed: $P   Failed: $F"
-  echo "==========================="
   if [ "$F" -gt 0 ]; then
+    echo "  ${R}${B}$F FAILED${Z}  ${G}$P passed${Z}"
     echo ""
-    echo "Some security gates failed. Review the output above."
+    echo "  Some security gates failed. Review the output above."
     exit 1
   fi
+  echo "  ${G}${B}All $P tests passed.${Z}"
   echo ""
-  echo "All security gates passed."
+  echo "  ${D}Advanced PEN-testing (50+ attack patterns): guardrail pentest --pro${Z}"
   echo ""
-  echo "For advanced PEN-testing (50+ attack patterns, profile escapes,"
-  echo "bypass persistence checks): guardrail pentest --pro"
 }
 
 cmd_new() {
