@@ -829,16 +829,20 @@
     <p class="sec-desc">Core guards catch the obvious threats. Pro guards catch the subtle ones: multi-step attacks that look harmless individually, agents disabling their own safeguards, PII leaking through unexpected vectors.</p>
     <div class="pro-grid">
       <div class="pro-item">
-        <h3>Advanced PII Detection</h3>
-        <p>15+ leak vectors beyond env/printenv. Catches secrets hidden in script files, SSH sessions, and process inspection.</p>
+        <h3>PII Shield</h3>
+        <p>Scans agent outputs for personal data across 10 EU countries. Detects IBAN, tax IDs, names, addresses. 3-tier classification: SICHER, PRUEFEN, FREI.</p>
+      </div>
+      <div class="pro-item">
+        <h3>Audit Trail</h3>
+        <p>Structured JSONL logging of every agent action. Daily file rotation, configurable retention. The evidence layer for compliance reporting.</p>
+      </div>
+      <div class="pro-item">
+        <h3>Compliance Reporter</h3>
+        <p>Maps every guard to EU AI Act articles. Generates compliance reports with coverage scores, incident documentation, and recommendations.</p>
       </div>
       <div class="pro-item">
         <h3>Multi-Step Attack Defense</h3>
         <p>Tracks command sequences across a session. Detects coordinated reconnaissance patterns that single-command guards miss.</p>
-      </div>
-      <div class="pro-item">
-        <h3>Supply Chain Security</h3>
-        <p>npm audit integration at install time. License compliance checks. Flags packages with known vulnerabilities before they enter your project.</p>
       </div>
       <div class="pro-item">
         <h3>Self-Bypass Prevention</h3>
@@ -846,11 +850,7 @@
       </div>
       <div class="pro-item">
         <h3>PEN-Test Framework</h3>
-        <p>50+ attack patterns to validate your guard chain. Profile escape testing. Bypass persistence checks. Generates a structured JSON report.</p>
-      </div>
-      <div class="pro-item">
-        <h3>Compliance Tooling</h3>
-        <p>EU AI Act article mapping. Risk classification per guard. Generates PDF audit reports to help document your governance approach.</p>
+        <p>50+ attack patterns to validate your guard chain. Profile escape testing. Bypass persistence checks. Generates a structured report.</p>
       </div>
     </div>
 
@@ -871,19 +871,26 @@
       </div>
       <div class="price-col featured">
         <div class="tier-name">Pro</div>
-        <div class="amount">&euro;20 <span>/dev/month</span></div>
-        <div class="tier-desc">48 additional guards. PEN-test framework. Priority support.</div>
+        <div class="amount">&euro;29 <span>/dev/month</span></div>
+        <div class="tier-desc">48+ advanced guards. PII Shield. Audit Trail. Compliance Reporter.</div>
         <ul>
           <li>Everything in Core</li>
-          <li>48 advanced guards from real incidents</li>
-          <li>Multi-step attack detection</li>
-          <li>Self-bypass prevention</li>
+          <li>48+ advanced guards from real incidents</li>
+          <li>PII Shield: personal data detection (10 EU countries)</li>
+          <li>Audit Trail: structured JSONL logging</li>
+          <li>Compliance Reporter: EU AI Act article mapping</li>
           <li>PEN-test framework with 50+ attack patterns</li>
-          <li>EU AI Act compliance report generation</li>
           <li>Priority email support</li>
         </ul>
         <a href="https://buy.stripe.com/4gMbJ22PB9Ro72O6Fses000" class="btn-accent" id="checkout-pro">Subscribe to Pro</a>
       </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:1rem;">
+      <p style="color:var(--dark-dim);font-size:0.85rem;margin-bottom:0.5rem;">Need a compliance package for your organization?</p>
+      <p style="color:#F0EDE8;font-size:1.1rem;font-weight:700;margin-bottom:0.3rem;">&euro;4,900 <span style="color:var(--dark-dim);font-size:0.82rem;font-weight:400;">one-time</span></p>
+      <p style="color:var(--dark-dim);font-size:0.82rem;max-width:45ch;margin:0 auto 1rem;">Compliance Kit: Guard configuration for your stack, EU AI Act gap analysis, documentation templates, 2h setup call.</p>
+      <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Compliance%20Kit" class="btn-outline">Request Compliance Kit</a>
     </div>
   </div>
 </section>
