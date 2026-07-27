@@ -133,6 +133,63 @@ run_edit error_swallow_guard.sh hook_error_swallow_guard "$TMP"; check swallow D
 rm -f "$TMP"
 run_edit error_swallow_guard.sh hook_error_swallow_guard "/home/p/utils.ts"; check swallow SILENT "non-critical"
 
+# Phase 12: real dispatcher contract
+echo "Phase 12: dispatcher end-to-end"
+run_dispatcher() {
+  local payload="$1"
+  RESULT=$(printf '%s' "$payload" | bash "$REPO_DIR/dispatchers/pre-bash.sh")
+}
+
+check_dispatcher() {
+  local name="$1" expect="$2"
+  local decision
+  decision=$(printf '%s' "$RESULT" | jq -r '.hookSpecificOutput.permissionDecision // "missing"' 2>/dev/null)
+  if [ "$decision" = "$expect" ]; then
+    ok
+  else
+    fail "[dispatcher] $name expected $expect, got $decision"
+  fi
+}
+
+run_dispatcher '{"session_id":"regression","tool_input":{"command":"git push origin main"}}'
+check_dispatcher "direct push to main" "deny"
+run_dispatcher '{"session_id":"regression","tool_input":{"command":"rm -rf /etc/nginx"}}'
+check_dispatcher "recursive delete on protected path" "deny"
+run_dispatcher '{"session_id":"regression","tool_input":{"command":"psql -c \"DELETE FROM profiles\""}}'
+check_dispatcher "mass delete without WHERE" "deny"
+run_dispatcher '{"session_id":"regression","tool_input":{"command":"git push origin develop"}}'
+check_dispatcher "push to develop" "allow"
+run_dispatcher '{"session_id":"regression","tool_input":{"command":"npm test"}}'
+check_dispatcher "ordinary test command" "allow"
+run_dispatcher '{"session_id":"regression","tool_input":{}}'
+check_dispatcher "missing command fails closed" "deny"
+run_dispatcher 'not-json'
+check_dispatcher "malformed JSON fails closed" "deny"
+
+# Phase 13: installer schema
+if [ "${GUARDRAIL_SKIP_INSTALLER_TEST:-false}" != "true" ]; then
+echo "Phase 13: installer schema"
+INSTALL_TEST_DIR=$(mktemp -d /tmp/guardrail-install-test.XXXXXX)
+GUARDRAIL_CLAUDE_DIR="$INSTALL_TEST_DIR" \
+GUARDRAIL_LOG_DIR="$INSTALL_TEST_DIR/logs" \
+GUARDRAIL_AUDIT_LOG="$INSTALL_TEST_DIR/audit.log" \
+  bash "$REPO_DIR/install.sh" >/dev/null
+for expected in \
+  "$INSTALL_TEST_DIR/hooks/guardrail/dispatchers/pre-bash.sh" \
+  "$INSTALL_TEST_DIR/hooks/guardrail/dispatchers/post-bash.sh" \
+  "$INSTALL_TEST_DIR/hooks/guardrail/dispatchers/post-edit.sh"; do
+  if jq -e --arg command "$expected" '
+    .hooks
+    | to_entries
+    | any(.value[]?.hooks[]?.command == $command)
+  ' "$INSTALL_TEST_DIR/settings.json" >/dev/null; then
+    ok
+  else
+    fail "[installer] missing current Claude hook schema for $expected"
+  fi
+done
+fi
+
 echo ""
 echo "=== Results: Passed=$P Failed=$F ==="
 if [ ${#ERRS[@]} -gt 0 ]; then
