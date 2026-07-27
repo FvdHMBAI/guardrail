@@ -1,0 +1,23 @@
+name: security-tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install jq on macOS
+        if: runner.os == 'macOS'
+        run: brew install jq
+      - name: Run regression and adversarial suites
+        run: npm test

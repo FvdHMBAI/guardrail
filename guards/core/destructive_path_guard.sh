@@ -19,6 +19,10 @@ hook_destructive_path_guard() {
     guardrail_audit "Path-Guard" "find -delete on protected path blocked" "$(echo "$CMD_SHELL" | head -c 60)"
     deny "PATH-GUARD: find -delete on protected paths is blocked. Run exceptional maintenance outside the controlled agent session."
   fi
+  if echo "$CMD_SHELL" | grep -qE "find[[:space:]]+(${_paths_re})[^|;]*-exec[[:space:]]+([^[:space:]]*/)?rm[[:space:]]+[^;]*-[a-zA-Z]*r"; then
+    guardrail_audit "Path-Guard" "find -exec rm on protected path blocked" "$(echo "$CMD_SHELL" | head -c 60)"
+    deny "PATH-GUARD: find -exec with recursive removal on protected paths is blocked."
+  fi
 
   if [ "$IS_RM_RECURSIVE" != "true" ]; then
     return 0

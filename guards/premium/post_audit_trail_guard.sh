@@ -16,17 +16,17 @@ hook_post_audit_trail_guard() {
   mkdir -p "$audit_dir" 2>/dev/null
 
   local command_ref
-  command_ref=$(printf '%s' "$CMD" | sha256sum | cut -c1-16)
+  command_ref=$(printf '%s' "$CMD" | _guardrail_sha256 | cut -c1-16)
   local output_len=${#OUTPUT}
   local cwd_val
   cwd_val=$(pwd 2>/dev/null || echo "unknown")
 
   local json_line
   json_line=$(jq -n -c \
-    --arg ts "$(date -Iseconds)" \
+    --arg ts "$(_guardrail_timestamp)" \
     --arg sid "${SESSION_ID:-unknown}" \
     --arg command_ref "$command_ref" \
-    --arg cwd_ref "$(printf '%s' "$cwd_val" | sha256sum | cut -c1-16)" \
+    --arg cwd_ref "$(printf '%s' "$cwd_val" | _guardrail_sha256 | cut -c1-16)" \
     --argjson output_len "$output_len" \
     --arg hook "post-bash" \
     --arg user "${USER:-unknown}" \
