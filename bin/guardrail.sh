@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-VERSION="0.2.4"
+VERSION="0.2.6"
 REAL_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")/.." && pwd)"
 

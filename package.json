@@ -1,7 +1,7 @@
 {
   "name": "guardrail-agent",
-  "version": "0.2.5",
-  "description": "Deterministic pre-execution safety hooks for Claude Code.",
+  "version": "0.2.6",
+  "description": "Model-independent pre-execution guards with native Claude Code integration.",
   "bin": {
     "guardrail": "./bin/guardrail.sh"
   },
@@ -11,6 +11,7 @@
   },
   "keywords": [
     "ai-safety",
+    "ai-agents",
     "claude-code",
     "guardrails",
     "security",
