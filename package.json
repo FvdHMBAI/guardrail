@@ -1,6 +1,6 @@
 {
   "name": "guardrail-agent",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Deterministic pre-execution safety hooks for Claude Code.",
   "bin": {
     "guardrail": "./bin/guardrail.sh"

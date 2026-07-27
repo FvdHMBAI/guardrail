@@ -45,9 +45,9 @@ Shell-Guard der Agent-Outputs auf personenbezogene Daten scannt.
 - Extrahiert die letzten N Zeilen aus dem Bash-Output ($OUTPUT)
 - Sendet per curl POST an shield.promptandbuild.de/classify
 - API-Key kommt aus der GuardRail-Lizenz (Pro-Kunden haben einen)
-- Stufe SICHER -> deny() mit Fundliste
-- Stufe PRUEFEN -> allow_with_msg() als Warnung
-- Stufe FREI -> durchlassen
+- Stufe DETECTED -> deny() mit Fundliste
+- Stufe REVIEW -> allow_with_msg() als Warnung
+- Stufe CLEAR -> durchlassen
 - Timeout: 3 Sekunden, bei Timeout durchlassen (kein Blocker fuer den Workflow)
 - Max Output-Länge: 5000 Zeichen (truncate, nicht blocken)
 

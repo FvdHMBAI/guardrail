@@ -42,31 +42,40 @@ hook_post_pii_shield_guard() {
 
   local payload
   payload=$(jq -n --arg text "$scan_text" --arg laender "$shield_countries" \
-    '{text: $text, laender: ($laender | split(","))}')
+    '{text: $text, countries: ($laender | split(","))}')
 
   local response
-  response=$(curl -sf -m "$shield_timeout" \
-    -X POST "$shield_url/v1/classify" \
+  if ! response=$(curl -sf -m "$shield_timeout" \
+    -X POST "$shield_url/v2/classify" \
     -H "Authorization: Bearer $shield_key" \
     -H "Content-Type: application/json" \
-    -d "$payload" 2>/dev/null) || return 0
+    -d "$payload" 2>/dev/null); then
+    add_context "PII-SHIELD WARNING: Shield could not verify this output. Check service availability and the Shield/GuardRail versions before sharing it."
+    return 0
+  fi
 
-  local stufe
-  stufe=$(echo "$response" | jq -r '.stufe // "FREI"' 2>/dev/null)
+  local level
+  level=$(echo "$response" | jq -r '.level // empty' 2>/dev/null)
 
-  case "$stufe" in
-    SICHER)
+  case "$level" in
+    DETECTED)
       local findings
-      findings=$(echo "$response" | jq -r '(.kategorien // []) | join(", ")' 2>/dev/null)
+      findings=$(echo "$response" | jq -r '(.categories // []) | join(", ")' 2>/dev/null)
       guardrail_audit "PII-Shield" "PII detected: $findings" "$(echo "$CMD" | head -c 60)" "blocked"
 
       add_context "PII-SHIELD POST-EXECUTION WARNING: Personal data detected in output ($findings). PostToolUse cannot suppress output; review and contain it before sharing."
       ;;
-    PRUEFEN)
+    REVIEW)
       local suspects
-      suspects=$(echo "$response" | jq -r '(.kategorien // []) | join(", ")' 2>/dev/null)
+      suspects=$(echo "$response" | jq -r '(.categories // []) | join(", ")' 2>/dev/null)
       guardrail_audit "PII-Shield" "Possible PII: $suspects" "$(echo "$CMD" | head -c 60)" "warned"
       add_context "PII-SHIELD NOTICE: Possible personal data in output ($suspects). Verify before sharing."
+      ;;
+    CLEAR)
+      ;;
+    *)
+      guardrail_audit "PII-Shield" "Unexpected Shield API response schema" "$(echo "$CMD" | head -c 60)" "warned"
+      add_context "PII-SHIELD WARNING: Shield returned an unknown response schema. Treat this output as unverified and check the Shield/GuardRail versions."
       ;;
   esac
 }
