@@ -16,6 +16,12 @@ hook_service_protection_guard() {
       deny "SERVICE-GUARD: Stopping or disabling critical services is blocked. Run exceptional maintenance outside the controlled agent session."
     fi
   fi
+  if echo "$CMD_SHELL" | grep -qE "service[[:space:]]+${_services_re}[[:space:]]+(stop|disable|kill)"; then
+    deny "SERVICE-GUARD: Stopping a critical service through the service command is blocked."
+  fi
+  if echo "$CMD_SHELL" | grep -qE "docker[[:space:]]+(stop|kill|rm)[[:space:]]+([^;&|]*[[:space:]])?${_services_re}([[:space:];&|]|$)"; then
+    deny "SERVICE-GUARD: Stopping or removing a critical service container is blocked."
+  fi
 
   if echo "$CMD_SHELL" | grep -qE "killall[[:space:]]+${_services_re}"; then
     deny "SERVICE-GUARD: killall on critical process is blocked."

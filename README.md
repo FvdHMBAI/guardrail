@@ -94,7 +94,7 @@ run the test, done. The guard loads automatically on the next command.
 ```
 $ guardrail status
 
-  GuardRail v0.2.4
+  GuardRail v0.2.5
 
   10 core guards active
   0 pro guards
@@ -110,7 +110,7 @@ $ guardrail pentest
   x BLOCKED rm -rf /etc
   + ALLOWED rm single file (FP)
 
-  All 22 tests passed.
+  All 103 tests passed.
 ```
 
 ## How It Works

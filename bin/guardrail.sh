@@ -161,7 +161,7 @@ COMPEOF
   echo "GuardRail Audit Report"
   echo "======================"
   echo "Period: last $days days"
-  echo "Generated: $(date -Iseconds)"
+  echo "Generated: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
   echo ""
 
   if [ ! -f "$AUDIT_LOG" ]; then
@@ -616,7 +616,7 @@ cmd_compliance_report() {
     while IFS= read -r line; do
       [ -z "$line" ] && continue
       local event_date
-      event_date=$(echo "$line" | grep -oP '\d{4}-\d{2}-\d{2}' | head -1)
+      event_date=$(echo "$line" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -1)
       [ -z "$event_date" ] && continue
       [[ "$event_date" < "$from_date" ]] && continue
       [[ "$event_date" > "$to_date" ]] && continue
@@ -663,7 +663,7 @@ cmd_compliance_report() {
 
   _emit "# GuardRail EU AI Act Compliance Report"
   _emit ""
-  _emit "**Generated:** $(date -Iseconds)"
+  _emit "**Generated:** $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
   _emit "**Period:** $from_date to $to_date"
   _emit "**GuardRail Version:** $VERSION"
   _emit ""
