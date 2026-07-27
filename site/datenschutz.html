@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <title>Privacy Policy — GuardRail</title>
+  <script>
+    if (new URLSearchParams(window.location.search).get('analytics') === 'off') {
+      localStorage.setItem('umami.disabled', '1');
+    }
+  </script>
+  <script defer src="https://stats.golfclub-app.de/getinfo" data-website-id="1e160706-a3b6-4c00-9ee6-5677dcf0d752" data-domains="guardrail.promptandbuild.de" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true"></script>
   <style>
     :root {
       --ground: #FAF8F5;
@@ -46,12 +52,31 @@
 
   <h2>2. Scope of data processing</h2>
   <p>
-    This website is a static information page. It uses <strong>no cookies</strong>,
-    <strong>no tracking</strong>, <strong>no analytics</strong>, and <strong>no contact forms</strong>.
-    We do not actively collect personal data.
+    This website is a static information page. It uses <strong>no cookies</strong>
+    and <strong>no contact forms</strong>. We use self-hosted, cookie-free Umami
+    Analytics to understand aggregate website usage.
   </p>
 
-  <h2>3. Server log files</h2>
+  <h2>3. Privacy-friendly web analytics</h2>
+  <p>
+    We operate Umami Analytics ourselves on servers in Germany. It measures page
+    views, referrer, approximate device and browser information, country derived
+    from the IP address. Umami does not set cookies, create cross-site profiles,
+    or transmit analytics data to Umami Software.
+    We do not enable session replay, collect form contents, or record URL query
+    parameters and fragments. Aggregate analytics records are retained for no
+    more than 24 months.
+  </p>
+  <p>
+    The IP address is used only to process the request and is not stored in the
+    analytics database. The legal basis is Art. 6(1)(f) GDPR. Our legitimate
+    interest is to evaluate the reach and usability of this website. You may
+    object to this processing by enabling your browser's Do Not Track setting
+    or by using our <a href="/datenschutz.html?analytics=off">analytics opt-out</a>.
+    The opt-out is stored locally in your browser.
+  </p>
+
+  <h2>4. Server log files</h2>
   <p>
     The hosting provider automatically collects and stores information in server log files
     that your browser transmits:
@@ -69,7 +94,7 @@
     provision of the website). Logs are deleted after 30 days.
   </p>
 
-  <h2>4. Hosting</h2>
+  <h2>5. Hosting</h2>
   <p>
     This website is hosted by <strong>Hetzner Online GmbH</strong>, Industriestr. 25,
     91710 Gunzenhausen, Germany. Hetzner processes the data listed above on our behalf.
@@ -77,13 +102,13 @@
     exclusively in Germany.
   </p>
 
-  <h2>5. SSL/TLS encryption</h2>
+  <h2>6. SSL/TLS encryption</h2>
   <p>
     This site uses SSL/TLS encryption for security. You can identify an encrypted
     connection by the lock icon in your browser's address bar.
   </p>
 
-  <h2>6. Email contact</h2>
+  <h2>7. Email contact</h2>
   <p>
     If you contact us by email, your information is stored to process the request.
     The legal basis is Art. 6(1)(b) GDPR (pre-contractual measures) or Art. 6(1)(f)
@@ -91,13 +116,13 @@
     years unless statutory retention duties apply.
   </p>
 
-  <h2>7. External links</h2>
+  <h2>8. External links</h2>
   <p>
     This website links to GitHub (github.com). When you follow these links, the
     provider's privacy terms apply. We do not transmit personal data to GitHub.
   </p>
 
-  <h2>8. Your rights</h2>
+  <h2>9. Your rights</h2>
   <p>You have the following rights in relation to the controller:</p>
   <ul>
     <li>Access (Art. 15 GDPR)</li>
@@ -113,7 +138,7 @@
     and Freedom of Information of North Rhine-Westphalia.
   </p>
 
-  <h2>9. Changes</h2>
+  <h2>10. Changes</h2>
   <p>
     This privacy policy is effective as of July 2026. It may need to be updated as
     the website develops.
