@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:,">
   <title>GuardRail — Pre-execution security for AI coding agents</title>
   <meta name="description" content="Open source pre-execution security guards for AI coding agents. Commands are checked before they run. Works with Claude Code.">
   <style>
@@ -830,7 +831,7 @@
     <div class="pro-grid">
       <div class="pro-item">
         <h3>PII Shield</h3>
-        <p>Scans agent outputs for personal data across 10 EU countries. Detects IBAN, tax IDs, names, addresses. 3-tier classification: SICHER, PRUEFEN, FREI.</p>
+        <p>Scans agent outputs for personal data across 10 EU countries. Detects IBAN, tax IDs, names, addresses. 3-tier classification: DETECTED, REVIEW, CLEAR.</p>
       </div>
       <div class="pro-item">
         <h3>Audit Trail</h3>
@@ -950,7 +951,7 @@
 
 <footer>
   <div class="wrap">
-    Built by <a href="https://frederikvonderheyden.de">Prompt &amp; Build</a> &middot; Core planned under MIT License &middot; <a href="/impressum.html">Impressum</a> &middot; <a href="/datenschutz.html">Datenschutz</a>
+    Built by <a href="https://frederikvonderheyden.de">Prompt &amp; Build</a> &middot; Core planned under MIT License &middot; <a href="/impressum.html">Legal Notice</a> &middot; <a href="/datenschutz.html">Privacy Policy</a>
     <p class="disclaimer">GuardRail is an additional enforcement layer, not a sandbox or compliance certificate. It catches accidental and plainly expressed dangerous actions; it does not contain a malicious agent that can rewrite its own hooks or shell. Keep the installation outside agent-writable workspaces and retain least-privilege access, branch protection, database permissions, backups, network controls, and human approval.</p>
   </div>
 </footer>

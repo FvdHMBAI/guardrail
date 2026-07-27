@@ -94,7 +94,7 @@ run the test, done. The guard loads automatically on the next command.
 ```
 $ guardrail status
 
-  GuardRail v0.2.5
+  GuardRail v0.2.6
 
   10 core guards active
   0 pro guards

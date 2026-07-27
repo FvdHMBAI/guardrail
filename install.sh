@@ -24,7 +24,7 @@ else
 fi
 
 echo ""
-echo "${B}  GuardRail${Z} ${D}v0.2.5${Z}"
+echo "${B}  GuardRail${Z} ${D}v0.2.6${Z}"
 echo "${D}  Pre-execution security for AI coding agents${Z}"
 echo ""
 

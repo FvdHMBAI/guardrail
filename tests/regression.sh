@@ -190,6 +190,41 @@ for expected in \
 done
 fi
 
+# Phase 14: Shield v2 contract and fail-unverified behavior
+echo "Phase 14: Shield v2 compatibility"
+source "$REPO_DIR/guards/premium/post_pii_shield_guard.sh"
+add_context() { RESULT="$1"; }
+guardrail_audit() { :; }
+curl() {
+  case "${CURL_FIXTURE:-}" in
+    detected) printf '%s' '{"level":"DETECTED","categories":["TAX_ID"]}' ;;
+    unknown) printf '%s' '{"unexpected":"schema"}' ;;
+    unavailable) return 22 ;;
+  esac
+}
+
+OUTPUT="synthetic output long enough to scan"
+CMD="synthetic command"
+GUARDRAIL_PII_SHIELD_KEY="synthetic-key"
+
+CURL_FIXTURE="detected"
+RESULT=""
+hook_post_pii_shield_guard
+printf '%s' "$RESULT" | grep -q "Personal data detected" \
+  && ok || fail "[shield-v2] DETECTED response must warn"
+
+CURL_FIXTURE="unknown"
+RESULT=""
+hook_post_pii_shield_guard
+printf '%s' "$RESULT" | grep -q "unknown response schema" \
+  && ok || fail "[shield-v2] unknown schema must fail unverified"
+
+CURL_FIXTURE="unavailable"
+RESULT=""
+hook_post_pii_shield_guard
+printf '%s' "$RESULT" | grep -q "could not verify" \
+  && ok || fail "[shield-v2] transport failure must fail unverified"
+
 echo ""
 echo "=== Results: Passed=$P Failed=$F ==="
 if [ ${#ERRS[@]} -gt 0 ]; then
