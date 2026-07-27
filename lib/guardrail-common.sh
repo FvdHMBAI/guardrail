@@ -4,13 +4,13 @@
 # License: MIT
 
 # Load config if present
-for _cfg in "./guardrail.config.sh" "$HOME/.guardrail/guardrail.config.sh" "${GUARDRAIL_HOME:-$HOME/.guardrail}/guardrail.config.sh"; do
+for _cfg in "${GUARDRAIL_HOME:-$HOME/.guardrail}/guardrail.config.sh" "$HOME/.guardrail/guardrail.config.sh"; do
   [ -f "$_cfg" ] && { source "$_cfg"; break; }
 done
 
 # --- Configuration with defaults ---
-GUARDRAIL_LOG_DIR="${GUARDRAIL_LOG_DIR:-/var/log/guardrail}"
-GUARDRAIL_AUDIT_LOG="${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log}"
+GUARDRAIL_LOG_DIR="${GUARDRAIL_LOG_DIR:-$HOME/.guardrail/logs}"
+GUARDRAIL_AUDIT_LOG="${GUARDRAIL_AUDIT_LOG:-$HOME/.guardrail/audit.log}"
 GUARDRAIL_STATE_DIR="${GUARDRAIL_STATE_DIR:-/tmp/guardrail}"
 GUARDRAIL_CONFIG_DIR="${GUARDRAIL_CONFIG_DIR:-$HOME/.claude}"
 GUARDRAIL_WEBHOOK_CMD="${GUARDRAIL_WEBHOOK_CMD:-}"
@@ -46,12 +46,18 @@ fi
 
 guardrail_log() {
   local guard="$1" message="$2"
-  echo "$(date -Iseconds) [$guard] $message" >> "$GUARDRAIL_LOG_DIR/${guard}.log" 2>/dev/null
+  local message_ref
+  message_ref=$(printf '%s' "$message" | sha256sum | cut -c1-16)
+  (umask 077; touch "$GUARDRAIL_LOG_DIR/${guard}.log") 2>/dev/null || return 0
+  echo "$(date -Iseconds) [$guard] message-ref:$message_ref" >> "$GUARDRAIL_LOG_DIR/${guard}.log" 2>/dev/null
 }
 
 guardrail_audit() {
   local guard="$1" action="$2" detail="$3" decision="${4:-blocked}"
-  echo "| $(date +%Y-%m-%d\ %H:%M) | $guard | $(echo "$action" | head -c 80 | tr '|' '/') | ${SESSION_ID:-unknown} | $(echo "$detail" | head -c 60 | tr '|' '/') | $decision |" >> "$GUARDRAIL_AUDIT_LOG" 2>/dev/null
+  local detail_ref
+  detail_ref=$(printf '%s' "$detail" | sha256sum | cut -c1-16)
+  (umask 077; touch "$GUARDRAIL_AUDIT_LOG") 2>/dev/null || return 0
+  echo "| $(date +%Y-%m-%d\ %H:%M) | $guard | $(echo "$action" | head -c 80 | tr '|' '/') | ${SESSION_ID:-unknown} | command-ref:$detail_ref | $decision |" >> "$GUARDRAIL_AUDIT_LOG" 2>/dev/null
 }
 
 guardrail_notify() {

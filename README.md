@@ -58,7 +58,7 @@ pattern matching misses.
 
 Plus: PEN-test framework (50+ attack patterns), priority support, compliance kit.
 
-**EUR 20/dev/month** | [Get started](https://guardrail.promptandbuild.de)
+**EUR 29/dev/month** | [Get started](https://guardrail.promptandbuild.de)
 
 ## Configuration
 
@@ -94,7 +94,7 @@ run the test, done. The guard loads automatically on the next command.
 ```
 $ guardrail status
 
-  GuardRail v0.2.2
+  GuardRail v0.2.4
 
   10 core guards active
   0 pro guards
@@ -135,10 +135,11 @@ AI Agent (Claude Code)
 Guards are bash functions. No runtime dependencies beyond bash and jq.
 Works on Linux and macOS. Installs in 5 seconds.
 
-## EU AI Act
+## Governance and the EU AI Act
 
-EU AI Act enforcement starts **August 2, 2026**. If you use AI coding agents
-in the EU, you need governance tooling. GuardRail provides:
+Using a coding agent does not automatically make a system "high-risk" under the
+EU AI Act. Classification depends on the system's intended purpose and context.
+GuardRail can provide technical evidence for a broader governance program:
 
 | Article | Requirement | How GuardRail helps |
 |---|---|---|
@@ -146,7 +147,21 @@ in the EU, you need governance tooling. GuardRail provides:
 | Art. 14 | Human oversight | deny() gates with admin approval workflows |
 | Art. 12 | Record-keeping | Timestamped audit log, exportable |
 
-Full compliance mapping with PDF export available in GuardRail Pro.
+These controls do not create legal compliance on their own. Full control
+mapping and gap documentation are available in GuardRail Pro.
+
+## Security model
+
+GuardRail is an additional enforcement layer, not a sandbox. Keep operating
+system permissions, branch protection, database roles, network egress controls,
+backups, and human approval for high-impact actions. The release suite tests
+guards both in isolation and through the real JSON hook dispatcher.
+
+It is designed to catch accidental or plainly expressed dangerous actions by
+an agent operating as the current user. It does not contain a malicious agent
+that can rewrite its own hooks, configuration, shell, or installation files.
+Keep installation and configuration outside the agent-writable workspace and
+use operating-system permissions when a stronger trust boundary is required.
 
 ## Works with
 

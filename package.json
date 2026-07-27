@@ -1,7 +1,7 @@
 {
   "name": "guardrail-agent",
-  "version": "0.2.3",
-  "description": "Pre-execution security guards for AI coding agents. EU AI Act ready.",
+  "version": "0.2.4",
+  "description": "Deterministic pre-execution safety hooks for Claude Code.",
   "bin": {
     "guardrail": "./bin/guardrail.sh"
   },

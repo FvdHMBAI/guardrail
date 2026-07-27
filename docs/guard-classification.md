@@ -9,7 +9,7 @@ Model: Open Core (MIT framework + proprietary premium)
 | Category | Count | Description |
 |----------|-------|-------------|
 | **Core (MIT)** | 10 | Universal guards any dev could write in <1h. No incident knowledge. |
-| **Premium (Pro)** | 38 | Derived from production incidents. Advanced attack detection. |
+| **Premium (Pro)** | 48 | Derived from production incidents. Advanced attack detection. |
 | **Internal** | 91 | Domain-specific, only relevant to our setup. |
 
 ---

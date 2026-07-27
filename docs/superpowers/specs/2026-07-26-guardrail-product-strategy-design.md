@@ -138,7 +138,7 @@ CLI-Befehl der aus Audit-Logs einen EU-AI-Act-Compliance-Nachweis generiert.
 
 1. **GitHub** -- Free-Tier bringt Stars, Stars bringen Sichtbarkeit
 2. **Content** -- Jeder KI-Agent-Incident ist ein Post: "Wie GuardRail das verhindert haette"
-3. **EU AI Act** -- Enforcement ab 2. August 2026, Dringlichkeit nutzen
+3. **Governance-Evidenz** -- sachlich zeigen, welche technischen Kontrollen GuardRail belegt; keine pauschale Hochrisiko- oder Fristbehauptung
 4. **PII Shield API** -- Nebeneinnahme, fuettert GuardRail-Funnel
 
 ## Was wir NICHT bauen
