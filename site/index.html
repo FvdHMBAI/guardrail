@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:,">
   <title>GuardRail — Pre-execution security for AI coding agents</title>
-  <meta name="description" content="Open source pre-execution security guards for AI coding agents. Commands are checked before they run. Works with Claude Code.">
+  <meta name="description" content="Open-source pre-execution security for AI coding agents. Model-independent guards block recognized dangerous command patterns before they run. Native Claude Code integration available today.">
   <style>
     @font-face {
       font-family: 'Narrow';
@@ -678,14 +678,14 @@
 
 <!-- HERO -->
 <header class="hero">
-  <div class="hero-eyebrow">Public beta &middot; Open-source Core &middot; Claude Code</div>
+  <div class="hero-eyebrow">Available now &middot; Open-source Core &middot; Model-independent engine</div>
   <h1>Stop dangerous agent actions before they become incidents.</h1>
-  <p class="hero-sub">GuardRail places deterministic security checks between Claude Code and your shell. It blocks destructive commands, secret exposure, unsafe database operations, and protected-branch pushes before execution.</p>
+  <p class="hero-sub">GuardRail places deterministic security checks between an AI coding agent and your shell. With its tested Claude Code adapter, it blocks recognized patterns for destructive commands, secret exposure, unsafe database operations, and protected-branch pushes before execution.</p>
   <div class="hero-install">
     <code><span class="prompt">$</span> npx guardrail-agent init</code>
-    <a href="#pro">Start protected</a>
+    <a href="#pro">Compare plans</a>
   </div>
-  <p class="hero-compat">Claude Code supported today &middot; Other agent integrations are not yet released</p>
+  <p class="hero-compat">Native Claude Code integration today &middot; Codex CLI and Gemini CLI adapters planned next &middot; The guard engine does not depend on an LLM</p>
 </header>
 
 <!-- TERMINAL DEMO -->
@@ -749,7 +749,7 @@
   <div class="wrap">
     <div class="sec-eyebrow">How it works</div>
     <h2 class="sec-title">One command to install. Safe defaults included.</h2>
-    <p class="sec-desc">GuardRail installs as pre-execution hooks in Claude Code. Every command passes through the guard chain before it runs. Start with safe defaults, then configure protected branches, tables, paths, and custom rules for your environment.</p>
+    <p class="sec-desc">GuardRail connects to an agent runtime through a small adapter and checks every command before it runs. The current installer configures Claude Code automatically. The guard engine itself is model-independent, so the same rules can protect additional runtimes as tested adapters become available.</p>
     <div class="how-steps">
       <div class="how-step">
         <div class="step-num">1</div>
@@ -774,7 +774,7 @@
 <!-- CORE GUARDS -->
 <section id="guards" class="guards">
   <div class="wrap">
-    <div class="sec-eyebrow">Free Core &middot; Public beta</div>
+    <div class="sec-eyebrow">Free Core &middot; Available now</div>
     <h2 class="sec-title">10 core guards included</h2>
     <p class="sec-desc">Ten readable MIT-licensed rules for common high-impact mistakes, backed by dispatcher, installer, regression, and adversarial tests.</p>
     <div class="guards-list">
@@ -849,13 +849,13 @@
       </div>
       <div class="origin-item">
         <h3>Open Core</h3>
-        <p>The 10 core guards are MIT licensed and free. The Pro tier adds 48 additional guards for advanced threat patterns. Both tiers run the same architecture.</p>
+        <p>The 10 core guards are MIT licensed and free. The Pro tier adds advanced guards derived from real production incidents. Both tiers run the same architecture.</p>
       </div>
     </div>
     <div class="stats">
       <div class="stat-item">
-        <div class="stat-num">58</div>
-        <div class="stat-label">Guards total</div>
+        <div class="stat-num">10</div>
+        <div class="stat-label">Open Core guards</div>
       </div>
       <div class="stat-item">
         <div class="stat-num">15</div>
@@ -919,34 +919,34 @@
           <li>Pre-bash, post-bash, post-edit hooks</li>
           <li>Custom guard directory for your own rules</li>
           <li>Audit log for all blocked commands</li>
-          <li>Public issue tracker after open-source release</li>
+          <li>Public source code, documentation, and issue tracker</li>
         </ul>
         <a href="https://github.com/FvdHMBAI/guardrail#readme" class="btn-outline">View Core and docs</a>
       </div>
       <div class="price-col featured">
         <div class="tier-name">Pro</div>
         <div class="amount">&euro;29 <span>/dev/month</span></div>
-        <div class="tier-desc">48 advanced guards. PII Shield. Audit Trail. Compliance Reporter.</div>
+        <div class="tier-desc">Advanced production guards. Local output scanning. Audit Trail. Technical evidence reports.</div>
         <ul>
           <li>Everything in Core</li>
-          <li>48 advanced guards from real incidents</li>
-          <li>PII Shield: personal data detection (10 EU countries)</li>
+          <li>Advanced guards derived from real incidents</li>
+          <li>Local output scanner for personal-data warnings</li>
           <li>Audit Trail: structured JSONL logging</li>
-          <li>Compliance Reporter: EU AI Act article mapping</li>
+          <li>Technical evidence report with EU AI Act control mapping</li>
           <li>PEN-test framework with 50+ attack patterns</li>
           <li>Priority email support</li>
         </ul>
         <a href="https://buy.stripe.com/4gMbJ22PB9Ro72O6Fses000" class="btn-accent" id="checkout-pro">Subscribe to Pro</a>
       </div>
       <div class="price-col">
-        <div class="bundle-note">Best complete protection</div>
+        <div class="bundle-note">Coordinated early access</div>
         <div class="tier-name">Agent Safety Bundle</div>
         <div class="amount">&euro;49 <span>/dev/month</span></div>
-        <div class="tier-desc">Control dangerous actions and personal-data exposure with GuardRail Pro plus the standalone Shield API.</div>
+        <div class="tier-desc">Combine local action controls with the managed Shield API for application-wide personal-data classification.</div>
         <ul>
           <li>Everything in GuardRail Pro</li>
-          <li>DSGVO Shield API access</li>
-          <li>1,000 classifications per day</li>
+          <li>Managed DSGVO Shield API beyond the local agent hook</li>
+          <li>1,000 classifications per Shield API key per day</li>
           <li>10 European country modules</li>
           <li>No input-text retention</li>
           <li>One coordinated onboarding path</li>
@@ -1025,8 +1025,8 @@
     <div class="faq-list">
       <div class="faq-item"><h3>Is GuardRail a sandbox?</h3><p>No. It is an additional enforcement layer for agent actions. Keep least-privilege access, backups, branch protection, database permissions, network controls, and human approval for critical operations.</p></div>
       <div class="faq-item"><h3>Will it block legitimate work?</h3><p>Core ships with conservative defaults and safe-command controls. Protected branches, tables, paths, and custom guards can be adapted to your environment. Every blocked action includes a reason so the agent can choose a safer path.</p></div>
-      <div class="faq-item"><h3>Which agents are supported?</h3><p>Claude Code has native hook support today. Additional agent integrations are planned, but are not currently advertised as supported.</p></div>
-      <div class="faq-item"><h3>What happens if Shield is unavailable?</h3><p>GuardRail does not silently treat an unavailable or unknown Shield response as clear. It reports that the data check could not be verified so your workflow can apply the appropriate policy.</p></div>
+      <div class="faq-item"><h3>Which agents are supported?</h3><p>Claude Code has a tested, zero-configuration integration today. The guards are model-independent, but each agent runtime needs a tested adapter for its event and decision format. Codex CLI and Gemini CLI are next; runtimes without a pre-execution interception point cannot provide the same blocking guarantee.</p></div>
+      <div class="faq-item"><h3>What happens if the managed Shield API is unavailable?</h3><p>This applies when the Agent Safety Bundle connects GuardRail to the managed Shield API. GuardRail does not silently treat an unavailable or unknown API response as clear; it reports that the data check could not be verified so your workflow can apply the appropriate policy.</p></div>
       <div class="faq-item"><h3>Can an attacker with host control bypass it?</h3><p>Yes. A process that can rewrite GuardRail itself or control the host is outside its containment boundary. Install the protection outside agent-writable workspaces and restrict host permissions.</p></div>
     </div>
   </div>
