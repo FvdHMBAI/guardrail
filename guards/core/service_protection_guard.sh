@@ -9,17 +9,11 @@
 hook_service_protection_guard() {
   local _services_re
   _services_re=$(_guardrail_list_to_regex_raw "$GUARDRAIL_CRITICAL_SERVICES")
-  local _state="${GUARDRAIL_STATE_DIR:-/tmp/guardrail}"
 
   if echo "$CMD_SHELL" | grep -qE 'systemctl[[:space:]]+(stop|disable|mask)[[:space:]]'; then
     if echo "$CMD_SHELL" | grep -qE "systemctl[[:space:]]+(stop|disable|mask)[[:space:]]+${_services_re}"; then
-      if [ -f "$_state/service-approved" ]; then
-        rm -f "$_state/service-approved" 2>/dev/null
-        guardrail_audit "Service-Guard" "Service stop with approval" "$(echo "$CMD_SHELL" | head -c 60)" "approved"
-        return 0
-      fi
       guardrail_audit "Service-Guard" "Critical service stop blocked" "$(echo "$CMD_SHELL" | head -c 60)"
-      deny "SERVICE-GUARD: Stopping/disabling critical services is blocked. Admin approval: touch $_state/service-approved"
+      deny "SERVICE-GUARD: Stopping or disabling critical services is blocked. Run exceptional maintenance outside the controlled agent session."
     fi
   fi
 

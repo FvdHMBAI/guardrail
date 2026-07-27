@@ -7,7 +7,6 @@
 # Shared fns: deny()
 
 hook_main_push_guard() {
-  local _state="${GUARDRAIL_STATE_DIR:-/tmp/guardrail}"
   local _branches_re
   _branches_re=$(_guardrail_list_to_regex_raw "$GUARDRAIL_PROTECTED_BRANCHES")
 
@@ -41,28 +40,8 @@ hook_main_push_guard() {
   if echo "$CMD_SHELL" | grep -qE "push[^;&|]*[[:space:]](origin|upstream)[[:space:]]+${_branches_re}([^[:alnum:]_-]|\$)" \
      || echo "$CMD_SHELL" | grep -qE "push[^;&|]*[[:alnum:]/_.-]+:(refs/heads/)?${_branches_re}([^[:alnum:]_-]|\$)"; then
 
-    # Exception 1: Explicit admin approval (one-time)
-    if [ -f "$_state/main-push-approved" ]; then
-      rm -f "$_state/main-push-approved" 2>/dev/null
-      guardrail_audit "Main-Push-Guard" "Push with admin approval" "$(echo "$CMD_SHELL" | head -c 60)" "approved"
-      return 0
-    fi
-
-    # Exception 2: Clean workflow — main only contains commits that are also on develop
-    local GIT_DIR=""
-    GIT_DIR=$(echo "$CMD_SHELL" | grep -oP 'cd\s+\K/[^\s;&]+' | head -1)
-    [ -z "$GIT_DIR" ] && GIT_DIR=$(echo "$CMD_SHELL" | grep -oP 'git\s+-C\s+\K/[^\s]+' | head -1)
-    local GIT_CMD="git"
-    [ -n "$GIT_DIR" ] && [ -d "$GIT_DIR/.git" ] && GIT_CMD="git -C $GIT_DIR"
-    $GIT_CMD fetch --quiet origin main develop 2>/dev/null || true
-    if [ -n "$($GIT_CMD log --oneline origin/main..main 2>/dev/null)" ] \
-       && $GIT_CMD merge-base --is-ancestor origin/develop main 2>/dev/null; then
-      guardrail_audit "Main-Push-Guard" "Push after PR merge (clean workflow)" "$(echo "$CMD_SHELL" | head -c 60)" "approved"
-      return 0
-    fi
-
     guardrail_audit "Main-Push-Guard" "Direct push to protected branch blocked" "$(echo "$CMD_SHELL" | head -c 60)"
-    deny "MAIN-PUSH-GUARD: Direct pushes to protected branches are BLOCKED. Use 'gh pr create' to create a pull request. Admin exception: touch $_state/main-push-approved (valid for one push)."
+    deny "MAIN-PUSH-GUARD: Direct pushes to protected branches are BLOCKED. Use a pull request. Administrative bypasses are intentionally unavailable to the controlled agent."
   fi
   return 0
 }

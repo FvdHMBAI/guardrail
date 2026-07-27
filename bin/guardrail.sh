@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-VERSION="0.2.3"
+VERSION="0.2.4"
 REAL_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")/.." && pwd)"
 
@@ -62,7 +62,10 @@ cmd_test() {
 }
 
 cmd_status() {
-  local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
+  local CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
+  local INSTALL_DIR="$CLAUDE_DIR/hooks/guardrail"
+  local SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+  local PRE_BASH="$INSTALL_DIR/dispatchers/pre-bash.sh"
 
   echo ""
   echo "  ${B}GuardRail${Z} ${D}v$VERSION${Z}"
@@ -74,6 +77,17 @@ cmd_status() {
     echo "  ${G}$core_count${Z} core guards active"
   else
     echo "  ${R}0${Z} core guards ${D}(run guardrail init)${Z}"
+  fi
+
+  if [ -x "$PRE_BASH" ] && [ -f "$SETTINGS_FILE" ] \
+    && jq -e --arg command "$PRE_BASH" \
+      '.hooks.PreToolUse[]?.hooks[]? | select(.command == $command)' \
+      "$SETTINGS_FILE" >/dev/null 2>&1 \
+    && [ "$(printf '%s' '{"session_id":"status-check","tool_input":{"command":"git push origin main"}}' |
+      bash "$PRE_BASH" | jq -r '.hookSpecificOutput.permissionDecision // "missing"')" = "deny" ]; then
+    echo "  ${G}Enforcement verified${Z} (registered hook and deny probe)"
+  else
+    echo "  ${R}Enforcement not verified${Z} (run guardrail init)"
   fi
 
   if [ -d "$INSTALL_DIR/guards/pro" ]; then
@@ -92,7 +106,7 @@ cmd_status() {
 
   echo ""
 
-  local AUDIT_LOG="${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log}"
+  local AUDIT_LOG="${GUARDRAIL_AUDIT_LOG:-$HOME/.guardrail/audit.log}"
   if [ -f "$AUDIT_LOG" ]; then
     local total blocked
     total=$(wc -l < "$AUDIT_LOG" | tr -d ' ')

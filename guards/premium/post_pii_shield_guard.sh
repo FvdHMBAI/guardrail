@@ -60,11 +60,7 @@ hook_post_pii_shield_guard() {
       findings=$(echo "$response" | jq -r '(.kategorien // []) | join(", ")' 2>/dev/null)
       guardrail_audit "PII-Shield" "PII detected: $findings" "$(echo "$CMD" | head -c 60)" "blocked"
 
-      if [ "$shield_mode" = "block" ]; then
-        add_context "PII-SHIELD BLOCKED: Personal data detected in output ($findings). Output suppressed. Review command: $(echo "$CMD" | head -c 80)"
-      else
-        add_context "PII-SHIELD WARNING: Personal data detected in output ($findings). Review before sharing."
-      fi
+      add_context "PII-SHIELD POST-EXECUTION WARNING: Personal data detected in output ($findings). PostToolUse cannot suppress output; review and contain it before sharing."
       ;;
     PRUEFEN)
       local suspects
