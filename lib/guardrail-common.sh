@@ -44,18 +44,30 @@ fi
 
 # --- Shared functions ---
 
+_guardrail_sha256() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum | cut -d' ' -f1
+  else
+    shasum -a 256 | cut -d' ' -f1
+  fi
+}
+
+_guardrail_timestamp() {
+  date -u '+%Y-%m-%dT%H:%M:%SZ'
+}
+
 guardrail_log() {
   local guard="$1" message="$2"
   local message_ref
-  message_ref=$(printf '%s' "$message" | sha256sum | cut -c1-16)
+  message_ref=$(printf '%s' "$message" | _guardrail_sha256 | cut -c1-16)
   (umask 077; touch "$GUARDRAIL_LOG_DIR/${guard}.log") 2>/dev/null || return 0
-  echo "$(date -Iseconds) [$guard] message-ref:$message_ref" >> "$GUARDRAIL_LOG_DIR/${guard}.log" 2>/dev/null
+  echo "$(_guardrail_timestamp) [$guard] message-ref:$message_ref" >> "$GUARDRAIL_LOG_DIR/${guard}.log" 2>/dev/null
 }
 
 guardrail_audit() {
   local guard="$1" action="$2" detail="$3" decision="${4:-blocked}"
   local detail_ref
-  detail_ref=$(printf '%s' "$detail" | sha256sum | cut -c1-16)
+  detail_ref=$(printf '%s' "$detail" | _guardrail_sha256 | cut -c1-16)
   (umask 077; touch "$GUARDRAIL_AUDIT_LOG") 2>/dev/null || return 0
   echo "| $(date +%Y-%m-%d\ %H:%M) | $guard | $(echo "$action" | head -c 80 | tr '|' '/') | ${SESSION_ID:-unknown} | command-ref:$detail_ref | $decision |" >> "$GUARDRAIL_AUDIT_LOG" 2>/dev/null
 }

@@ -12,6 +12,9 @@ ALLOW='{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":
 deny() {
   local reason="$1"
   local rj
+  if declare -F guardrail_audit >/dev/null 2>&1; then
+    guardrail_audit "Dispatcher" "$reason" "${CMD:-unavailable}" "blocked"
+  fi
   rj=$(printf "%s" "$reason" | jq -Rs .)
   echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":${rj}}}"
   exit 0
@@ -70,8 +73,8 @@ _guardrail_run hook_basic_secret_detector
 _guardrail_run hook_destructive_path_guard
 _guardrail_run hook_firewall_flush_guard
 _guardrail_run hook_service_protection_guard
-case "$CMD" in
-  *"psql"*|*"docker exec"*psql*)
+case "${CMD,,}" in
+  *"psql"*|*"pgcli"*|*"docker exec"*psql*)
     _guardrail_load_guard "mass_update_guard.sh"; _guardrail_run hook_mass_update_guard
     ;;
 esac

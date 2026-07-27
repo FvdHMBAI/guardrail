@@ -5,7 +5,7 @@
 
 hook_basic_pii_gate() {
   # Block bare env/printenv commands
-  if echo "$CMD_SHELL" | grep -qE '(^|\s|;|\||&&)(/usr/bin/)?(env|printenv)(\s|$|\|)'; then
+  if echo "$CMD_SHELL" | grep -qE '(^|[[:space:];|&])([^[:space:];|&]*/)?(busybox[[:space:]]+)?(env|printenv)([[:space:];|&]|$)'; then
     guardrail_audit "PII-Gate" "blocked" "$(echo "$CMD_SHELL" | head -c 60)"
     deny "PII-GATE: Command exposes all environment variables. Use specific variable access instead."
     return
@@ -19,10 +19,18 @@ hook_basic_pii_gate() {
   fi
 
   # Block declare -x (dumps exported vars)
-  if echo "$CMD_SHELL" | grep -qE '(^|\s|;)declare\s+-x(\s|$)'; then
+  if echo "$CMD_SHELL" | grep -qE '(^|[[:space:];|&])(declare|typeset)[[:space:]]+-x([[:space:];|&]|$)'; then
     guardrail_audit "PII-Gate" "blocked" "declare -x"
     deny "PII-GATE: 'declare -x' dumps all exported variables."
     return
+  fi
+
+  # Other common shell builtins that enumerate exported variables.
+  if echo "$CMD_SHELL" | grep -qE '(^|[[:space:];|&])export[[:space:]]+-p([[:space:];|&]|$)' \
+     || echo "$CMD_SHELL" | grep -qE '(^|[[:space:];|&])compgen[[:space:]]+-e([[:space:];|&]|$)' \
+     || echo "$CMD_SHELL" | grep -qE '(^|[;|&][[:space:]]*)set([[:space:]]+-o[[:space:]]+posix)?[[:space:]]*($|[;|&])'; then
+    guardrail_audit "PII-Gate" "Shell environment enumeration blocked" "environment-enumeration"
+    deny "PII-GATE: Shell environment enumeration can expose all process secrets. Query only the specific non-secret variable required."
   fi
 
   # Block docker inspect without --format
