@@ -45,8 +45,8 @@ Every guard is configurable. Every block is logged. Every log has a timestamp.
 
 ## GuardRail Pro
 
-48 advanced guards from real production incidents. The attacks that basic
-pattern matching misses.
+Advanced guards derived from real production incidents. They address attacks
+that basic pattern matching misses.
 
 | What Pro catches | Why it matters |
 |---|---|
@@ -116,7 +116,7 @@ $ guardrail pentest
 ## How It Works
 
 ```
-AI Agent (Claude Code)
+AI Coding Agent
       |
       v
 [Pre-Bash Dispatcher]     Before the command runs
@@ -165,8 +165,13 @@ use operating-system permissions when a stronger trust boundary is required.
 
 ## Works with
 
-**Claude Code** -- native hook support, zero config.
-Cursor, GitHub Copilot, Windsurf support planned.
+**Claude Code** -- tested native hook support, zero configuration.
+
+The guard engine is model-independent. Agent runtimes still need a small,
+tested adapter that translates their tool event into GuardRail's command
+input and returns the correct allow or deny response. Codex CLI and Gemini
+CLI adapters are planned next. Runtimes without a pre-execution interception
+point cannot offer the same blocking guarantee.
 
 ## Requirements
 

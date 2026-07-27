@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:,">
   <title>GuardRail — Pre-execution security for AI coding agents</title>
-  <meta name="description" content="Open source pre-execution security guards for AI coding agents. Commands are checked before they run. Works with Claude Code.">
+  <meta name="description" content="Open-source pre-execution security for AI coding agents. Model-independent guards block recognized dangerous command patterns before they run. Native Claude Code integration available today.">
   <style>
     @font-face {
       font-family: 'Narrow';
@@ -438,7 +438,7 @@
     /* Pricing comparison */
     .pricing-table {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
@@ -517,6 +517,49 @@
       border: 1px solid rgba(255,255,255,0.2);
     }
     .btn-outline:hover { background: rgba(255,255,255,0.05); text-decoration: none; color: #F0EDE8; }
+
+    /* Evidence, comparison and FAQ */
+    .proof-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: rgba(45,42,38,0.1);
+      border: 1px solid rgba(45,42,38,0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 2rem;
+    }
+    .proof-item { background: var(--ground); padding: 1.4rem; }
+    .proof-item strong {
+      display: block; font-family: var(--display); font-size: 1.55rem;
+      margin-bottom: 0.25rem;
+    }
+    .proof-item span { color: var(--ink-dim); font-size: 0.8rem; line-height: 1.45; }
+    .comparison {
+      display: block; width: 100%; max-width: 100%; overflow-x: auto;
+      border-collapse: collapse; margin-top: 2rem; font-size: 0.86rem;
+    }
+    .comparison th, .comparison td {
+      padding: 0.9rem; border-bottom: 1px solid rgba(45,42,38,0.1);
+      text-align: left; vertical-align: top;
+    }
+    .comparison th {
+      font-size: 0.75rem; color: var(--ink-faint);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .comparison td:first-child { font-weight: 600; }
+    .yes { color: var(--green); font-weight: 700; }
+    .partial { color: var(--accent); font-weight: 700; }
+    .faq-list { max-width: 780px; }
+    .faq-item { padding: 1.2rem 0; border-top: 1px solid rgba(45,42,38,0.12); }
+    .faq-item h3 { font-size: 1rem; margin-bottom: 0.4rem; }
+    .faq-item p { color: var(--ink-dim); font-size: 0.88rem; line-height: 1.6; }
+    .bundle-note {
+      display: inline-block; color: var(--accent);
+      border: 1px solid rgba(214,73,51,0.35); border-radius: 999px;
+      padding: 0.25rem 0.65rem; font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.7rem;
+    }
 
     /* Compliance */
     .compliance-grid {
@@ -608,6 +651,9 @@
       .stats { gap: 2rem; }
       .stat-num { font-size: 2.2rem; }
       .pricing-table { grid-template-columns: 1fr; }
+      .proof-bar { grid-template-columns: 1fr 1fr; }
+      .comparison { font-size: 0.75rem; }
+      .comparison th, .comparison td { padding: 0.65rem 0.4rem; }
       .cta-install { flex-direction: column; }
       .cta-install code { border-radius: 4px 4px 0 0; }
       .cta-install a { border-radius: 0 0 4px 4px; justify-content: center; }
@@ -622,23 +668,24 @@
     <div class="nav-links">
       <a href="#problem">Why</a>
       <a href="#guards">Guards</a>
+      <a href="#evidence">Evidence</a>
       <a href="#pro">Pro</a>
-      <a href="#compliance">Compliance</a>
-      <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Private%20Preview" class="nav-cta">Private preview</a>
+      <a href="#faq">FAQ</a>
+      <a href="#pro" class="nav-cta">See plans</a>
     </div>
   </div>
 </nav>
 
 <!-- HERO -->
 <header class="hero">
-  <div class="hero-eyebrow">Private beta &middot; Open-source Core in preparation</div>
-  <h1>Review every dangerous command before it becomes an incident.</h1>
-  <p class="hero-sub">GuardRail adds deterministic safety hooks between Claude Code and your shell. High-risk command patterns are denied before execution; safe commands continue normally.</p>
+  <div class="hero-eyebrow">Available now &middot; Open-source Core &middot; Model-independent engine</div>
+  <h1>Stop dangerous agent actions before they become incidents.</h1>
+  <p class="hero-sub">GuardRail places deterministic security checks between an AI coding agent and your shell. With its tested Claude Code adapter, it blocks recognized patterns for destructive commands, secret exposure, unsafe database operations, and protected-branch pushes before execution.</p>
   <div class="hero-install">
     <code><span class="prompt">$</span> npx guardrail-agent init</code>
-    <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Private%20Preview">Request preview</a>
+    <a href="#pro">Compare plans</a>
   </div>
-  <p class="hero-compat">Claude Code supported today &middot; Other agent integrations are not yet released</p>
+  <p class="hero-compat">Native Claude Code integration today &middot; Codex CLI and Gemini CLI adapters planned next &middot; The guard engine does not depend on an LLM</p>
 </header>
 
 <!-- TERMINAL DEMO -->
@@ -701,8 +748,8 @@
 <section id="how">
   <div class="wrap">
     <div class="sec-eyebrow">How it works</div>
-    <h2 class="sec-title">One command to install. Zero configuration.</h2>
-    <p class="sec-desc">GuardRail installs as pre-execution hooks in your AI coding agent. Every command passes through the guard chain before it runs. No dashboard, no YAML files, no SaaS dependency.</p>
+    <h2 class="sec-title">One command to install. Safe defaults included.</h2>
+    <p class="sec-desc">GuardRail connects to an agent runtime through a small adapter and checks every command before it runs. The current installer configures Claude Code automatically. The guard engine itself is model-independent, so the same rules can protect additional runtimes as tested adapters become available.</p>
     <div class="how-steps">
       <div class="how-step">
         <div class="step-num">1</div>
@@ -727,9 +774,9 @@
 <!-- CORE GUARDS -->
 <section id="guards" class="guards">
   <div class="wrap">
-    <div class="sec-eyebrow">Free Core &middot; Public release in preparation</div>
+    <div class="sec-eyebrow">Free Core &middot; Available now</div>
     <h2 class="sec-title">10 core guards included</h2>
-    <p class="sec-desc">Ten readable MIT-licensed rules for common high-impact mistakes. Public source release follows after the private security review.</p>
+    <p class="sec-desc">Ten readable MIT-licensed rules for common high-impact mistakes, backed by dispatcher, installer, regression, and adversarial tests.</p>
     <div class="guards-list">
       <div class="guard-item">
         <div class="type-tag">pre-bash</div>
@@ -786,7 +833,7 @@
 </section>
 
 <!-- ORIGIN / CREDIBILITY -->
-<section>
+<section id="evidence">
   <div class="wrap">
     <div class="sec-eyebrow">Why this exists</div>
     <h2 class="sec-title">Built from real production incidents</h2>
@@ -802,22 +849,28 @@
       </div>
       <div class="origin-item">
         <h3>Open Core</h3>
-        <p>The 10 core guards are MIT licensed and free. The Pro tier adds 48 additional guards for advanced threat patterns. Both tiers run the same architecture.</p>
+        <p>The 10 core guards are MIT licensed and free. The Pro tier adds advanced guards derived from real production incidents. Both tiers run the same architecture.</p>
       </div>
     </div>
     <div class="stats">
       <div class="stat-item">
-        <div class="stat-num">58</div>
-        <div class="stat-label">Guards total</div>
+        <div class="stat-num">10</div>
+        <div class="stat-label">Open Core guards</div>
       </div>
       <div class="stat-item">
         <div class="stat-num">15</div>
         <div class="stat-label">Apps in our production</div>
       </div>
       <div class="stat-item">
-        <div class="stat-num">103</div>
+        <div class="stat-num">106</div>
         <div class="stat-label">Automated release checks</div>
       </div>
+    </div>
+    <div class="proof-bar">
+      <div class="proof-item"><strong>11</strong><span>real bypass variants found and closed during hardening</span></div>
+      <div class="proof-item"><strong>2 OS</strong><span>release CI verified on Ubuntu and macOS</span></div>
+      <div class="proof-item"><strong>Fail safe</strong><span>broken or unknown Shield responses are surfaced as unverified</span></div>
+      <div class="proof-item"><strong>Auditable</strong><span>readable shell guards and structured evidence instead of hidden model judgment</span></div>
     </div>
   </div>
 </section>
@@ -866,24 +919,39 @@
           <li>Pre-bash, post-bash, post-edit hooks</li>
           <li>Custom guard directory for your own rules</li>
           <li>Audit log for all blocked commands</li>
-          <li>Public issue tracker after open-source release</li>
+          <li>Public source code, documentation, and issue tracker</li>
         </ul>
-        <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Core%20Preview" class="btn-outline">Request preview</a>
+        <a href="https://github.com/FvdHMBAI/guardrail#readme" class="btn-outline">View Core and docs</a>
       </div>
       <div class="price-col featured">
         <div class="tier-name">Pro</div>
         <div class="amount">&euro;29 <span>/dev/month</span></div>
-        <div class="tier-desc">48 advanced guards. PII Shield. Audit Trail. Compliance Reporter.</div>
+        <div class="tier-desc">Advanced production guards. Local output scanning. Audit Trail. Technical evidence reports.</div>
         <ul>
           <li>Everything in Core</li>
-          <li>48 advanced guards from real incidents</li>
-          <li>PII Shield: personal data detection (10 EU countries)</li>
+          <li>Advanced guards derived from real incidents</li>
+          <li>Local output scanner for personal-data warnings</li>
           <li>Audit Trail: structured JSONL logging</li>
-          <li>Compliance Reporter: EU AI Act article mapping</li>
+          <li>Technical evidence report with EU AI Act control mapping</li>
           <li>PEN-test framework with 50+ attack patterns</li>
           <li>Priority email support</li>
         </ul>
         <a href="https://buy.stripe.com/4gMbJ22PB9Ro72O6Fses000" class="btn-accent" id="checkout-pro">Subscribe to Pro</a>
+      </div>
+      <div class="price-col">
+        <div class="bundle-note">Coordinated early access</div>
+        <div class="tier-name">Agent Safety Bundle</div>
+        <div class="amount">&euro;49 <span>/dev/month</span></div>
+        <div class="tier-desc">Combine local action controls with the managed Shield API for application-wide personal-data classification.</div>
+        <ul>
+          <li>Everything in GuardRail Pro</li>
+          <li>Managed DSGVO Shield API beyond the local agent hook</li>
+          <li>1,000 classifications per Shield API key per day</li>
+          <li>10 European country modules</li>
+          <li>No input-text retention</li>
+          <li>One coordinated onboarding path</li>
+        </ul>
+        <a href="mailto:frederik@frederikvonderheyden.de?subject=Agent%20Safety%20Bundle%20Early%20Access" class="btn-outline">Request bundle access</a>
       </div>
     </div>
 
@@ -893,6 +961,24 @@
       <p style="color:var(--dark-dim);font-size:0.82rem;max-width:45ch;margin:0 auto 1rem;">Compliance Kit: Guard configuration for your stack, EU AI Act gap analysis, documentation templates, 2h setup call.</p>
       <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Compliance%20Kit" class="btn-outline">Request Compliance Kit</a>
     </div>
+  </div>
+</section>
+
+<section id="comparison">
+  <div class="wrap">
+    <div class="sec-eyebrow">Why another security layer?</div>
+    <h2 class="sec-title">Permissions ask. GuardRail enforces policy.</h2>
+    <p class="sec-desc">Built-in confirmations and sandboxes remain important. GuardRail adds repeatable, organization-specific checks for the exact operations that cause production incidents.</p>
+    <table class="comparison">
+      <thead><tr><th>Capability</th><th>Agent permissions</th><th>Sandbox</th><th>GuardRail</th></tr></thead>
+      <tbody>
+        <tr><td>Ask before broad tool use</td><td class="yes">Yes</td><td>Varies</td><td class="yes">Yes, through the host agent</td></tr>
+        <tr><td>Recognize unsafe SQL without WHERE</td><td class="partial">Not consistently</td><td>No</td><td class="yes">Deterministic rule</td></tr>
+        <tr><td>Protect named branches, tables and services</td><td class="partial">Manual</td><td class="partial">Environment-level</td><td class="yes">Configurable policy</td></tr>
+        <tr><td>Detect multi-step reconnaissance</td><td>No</td><td>No</td><td class="yes">Pro</td></tr>
+        <tr><td>Produce a readable policy trail</td><td class="partial">Limited</td><td class="partial">Limited</td><td class="yes">Structured audit evidence</td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
@@ -932,17 +1018,31 @@
   </div>
 </section>
 
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-eyebrow">Questions before you install</div>
+    <h2 class="sec-title">Clear scope. No security theatre.</h2>
+    <div class="faq-list">
+      <div class="faq-item"><h3>Is GuardRail a sandbox?</h3><p>No. It is an additional enforcement layer for agent actions. Keep least-privilege access, backups, branch protection, database permissions, network controls, and human approval for critical operations.</p></div>
+      <div class="faq-item"><h3>Will it block legitimate work?</h3><p>Core ships with conservative defaults and safe-command controls. Protected branches, tables, paths, and custom guards can be adapted to your environment. Every blocked action includes a reason so the agent can choose a safer path.</p></div>
+      <div class="faq-item"><h3>Which agents are supported?</h3><p>Claude Code has a tested, zero-configuration integration today. The guards are model-independent, but each agent runtime needs a tested adapter for its event and decision format. Codex CLI and Gemini CLI are next; runtimes without a pre-execution interception point cannot provide the same blocking guarantee.</p></div>
+      <div class="faq-item"><h3>What happens if the managed Shield API is unavailable?</h3><p>This applies when the Agent Safety Bundle connects GuardRail to the managed Shield API. GuardRail does not silently treat an unavailable or unknown API response as clear; it reports that the data check could not be verified so your workflow can apply the appropriate policy.</p></div>
+      <div class="faq-item"><h3>Can an attacker with host control bypass it?</h3><p>Yes. A process that can rewrite GuardRail itself or control the host is outside its containment boundary. Install the protection outside agent-writable workspaces and restrict host permissions.</p></div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA -->
 <section class="cta-section">
   <div class="wrap">
-    <h2 class="sec-title">Join the private security review</h2>
-    <p class="sec-desc">Get the ten-rule Core, the threat model, and the release test evidence before the public open-source launch.</p>
+    <h2 class="sec-title">Give your agent power without leaving it unchecked.</h2>
+    <p class="sec-desc">Start with the free Core, upgrade for advanced protection, or combine action security with European personal-data detection.</p>
     <div class="cta-install">
       <code><span class="prompt">$</span> npx guardrail-agent init</code>
-      <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Private%20Preview">Request preview</a>
+      <a href="#pro">Choose a plan</a>
     </div>
     <div class="cta-links">
-      <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Documentation">Documentation</a>
+      <a href="https://github.com/FvdHMBAI/guardrail#readme">Documentation</a>
       <a href="mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Security%20Feedback">Report a security issue</a>
       <a href="mailto:frederik@frederikvonderheyden.de">Contact</a>
     </div>
@@ -951,7 +1051,7 @@
 
 <footer>
   <div class="wrap">
-    Built by <a href="https://frederikvonderheyden.de">Prompt &amp; Build</a> &middot; Core planned under MIT License &middot; <a href="/impressum.html">Legal Notice</a> &middot; <a href="/datenschutz.html">Privacy Policy</a>
+    Built by <a href="https://frederikvonderheyden.de">Prompt &amp; Build</a> &middot; <a href="https://github.com/FvdHMBAI/guardrail">GitHub</a> &middot; Core under MIT License &middot; <a href="/impressum.html">Legal Notice</a> &middot; <a href="/datenschutz.html">Privacy Policy</a>
     <p class="disclaimer">GuardRail is an additional enforcement layer, not a sandbox or compliance certificate. It catches accidental and plainly expressed dangerous actions; it does not contain a malicious agent that can rewrite its own hooks or shell. Keep the installation outside agent-writable workspaces and retain least-privilege access, branch protection, database permissions, backups, network controls, and human approval.</p>
   </div>
 </footer>
