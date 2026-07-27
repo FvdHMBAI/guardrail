@@ -272,6 +272,42 @@
       margin-bottom: 2.5rem;
       line-height: 1.7;
     }
+    .product-demo {
+      background: var(--ground-alt);
+    }
+    .product-demo-frame {
+      overflow: hidden;
+      border: 1px solid rgba(45,42,38,0.14);
+      border-radius: 10px;
+      background: #11100e;
+      box-shadow: 0 22px 60px rgba(45,42,38,0.16);
+    }
+    .product-demo-frame video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #11100e;
+    }
+    .product-demo-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .product-demo-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      background: var(--ink);
+      color: var(--ground);
+      padding: 0.78rem 1.15rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .product-demo-cta:hover { opacity: 0.9; text-decoration: none; }
+    .product-demo-note { color: var(--ink-faint); font-size: 0.78rem; }
 
     /* How it works */
     .how-steps {
@@ -645,6 +681,8 @@
       .hero-install { flex-direction: column; }
       .hero-install code { border-radius: 4px 4px 0 0; }
       .hero-install a { border-radius: 0 0 4px 4px; justify-content: center; padding: 0.6rem; }
+      .product-demo-actions { align-items: stretch; flex-direction: column; }
+      .product-demo-cta { width: 100%; }
       section { padding: 3rem 1rem; }
       .demo-body { font-size: 0.72rem; }
       .how-steps { grid-template-columns: 1fr; gap: 1.5rem; }
@@ -768,6 +806,25 @@
         <h3>Dangerous commands are blocked</h3>
         <p>When a command matches a known dangerous pattern, GuardRail blocks it before execution. The agent sees why it was blocked and adjusts.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCT DEMO -->
+<section id="product-demo" class="product-demo">
+  <div class="wrap">
+    <div class="sec-eyebrow">25-second product demo</div>
+    <h2 class="sec-title">See GuardRail stop a dangerous action.</h2>
+    <p class="sec-desc">Watch a real policy check block a high-risk command before execution, explain the decision, and leave the developer in control.</p>
+    <div class="product-demo-frame">
+      <video controls preload="metadata" playsinline poster="/assets/guardrail-product-demo-poster.jpg" aria-label="GuardRail product demonstration with English narration">
+        <source src="/assets/guardrail-product-demo.mp4" type="video/mp4">
+        Your browser does not support embedded video. <a href="/assets/guardrail-product-demo.mp4">Download the product demo</a>.
+      </video>
+    </div>
+    <div class="product-demo-actions">
+      <a class="product-demo-cta" href="#pro">Compare Core and Pro</a>
+      <span class="product-demo-note">Voice included. Press play when you are ready.</span>
     </div>
   </div>
 </section>
