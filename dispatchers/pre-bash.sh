@@ -73,7 +73,8 @@ _guardrail_run hook_basic_secret_detector
 _guardrail_run hook_destructive_path_guard
 _guardrail_run hook_firewall_flush_guard
 _guardrail_run hook_service_protection_guard
-case "${CMD,,}" in
+CMD_LOWER=$(printf '%s' "$CMD" | tr '[:upper:]' '[:lower:]')
+case "$CMD_LOWER" in
   *"psql"*|*"pgcli"*|*"docker exec"*psql*)
     _guardrail_load_guard "mass_update_guard.sh"; _guardrail_run hook_mass_update_guard
     ;;

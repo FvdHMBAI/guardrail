@@ -80,9 +80,9 @@ guardrail_notify() {
 }
 
 _guardrail_list_to_regex() {
-  echo "$1" | tr ' ' '\n' | sed 's/\./\\./g' | paste -sd'|' | sed 's/^/(/; s/$/)/'
+  printf '%s' "$1" | tr ' ' '\n' | sed 's/\./\\./g' | tr '\n' '|' | sed 's/|$//; s/^/(/; s/$/)/'
 }
 
 _guardrail_list_to_regex_raw() {
-  echo "$1" | tr ' ' '\n' | paste -sd'|' | sed 's/^/(/; s/$/)/'
+  printf '%s' "$1" | tr ' ' '\n' | tr '\n' '|' | sed 's/|$//; s/^/(/; s/$/)/'
 }
