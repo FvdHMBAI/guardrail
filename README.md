@@ -1,6 +1,12 @@
 # GuardRail
 
+[![CI](https://github.com/FvdHMBAI/guardrail/actions/workflows/ci.yml/badge.svg)](https://github.com/FvdHMBAI/guardrail/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/guardrail-agent)](https://www.npmjs.com/package/guardrail-agent)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Pre-execution security guards for AI coding agents.
+
+> **Public repository:** This repository intentionally contains the MIT-licensed GuardRail Core. Pro rules, license services, customer configurations, and private operational data are not stored here. See [PUBLIC_LAUNCH.md](PUBLIC_LAUNCH.md) for the publication boundary.
 
 <p align="center">
   <img src="docs/demo.svg" alt="GuardRail demo" width="680">
@@ -12,8 +18,8 @@ One command. Zero config. Every command your AI agent runs is guarded before it 
 npx guardrail-agent init
 ```
 
-Derived from **100+ production guards running across 15 applications**.
-These are the patterns that actually stop incidents.
+Derived from production guard patterns exercised across 15 applications since 2025.
+See [Claims and evidence](docs/CLAIMS_AND_EVIDENCE.md) for definitions, evidence status, and the limits of these claims.
 
 ## Why
 
@@ -59,6 +65,17 @@ that basic pattern matching misses.
 Plus: PEN-test framework (50+ attack patterns), priority support, compliance kit.
 
 **EUR 29/dev/month** | [Get started](https://guardrail.promptandbuild.de)
+
+## For teams
+
+Evaluating GuardRail for a development team? Book a focused 20-minute security review to map your agent runtime, protected resources, and rollout path: [request a team review](mailto:frederik@frederikvonderheyden.de?subject=GuardRail%20Team%20Security%20Review).
+
+For procurement and security review, start with:
+
+- [Threat model](docs/THREAT_MODEL.md)
+- [Security policy and vulnerability reporting](SECURITY.md)
+- [Claims and evidence register](docs/CLAIMS_AND_EVIDENCE.md)
+- [Release and installation verification](docs/RELEASE_CHECKLIST.md)
 
 ## Configuration
 
@@ -135,6 +152,10 @@ AI Coding Agent
 Guards are bash functions. No runtime dependencies beyond bash and jq.
 Works on Linux and macOS. Installs in 5 seconds.
 
+## Verification
+
+Every pull request runs regression, adversarial, installer-adversarial, shell syntax, and packaged-install smoke tests on Linux and macOS. Releases should follow the [release checklist](docs/RELEASE_CHECKLIST.md). Security guarantees and exclusions are documented in the [threat model](docs/THREAT_MODEL.md).
+
 ## Governance and the EU AI Act
 
 Using a coding agent does not automatically make a system "high-risk" under the
@@ -185,4 +206,4 @@ MIT. See [LICENSE](LICENSE).
 ---
 
 Built by [Prompt & Build](https://promptandbuild.de).
-Patterns extracted from production systems running 100+ guards across 15 applications since 2025.
+Production-derived patterns exercised across 15 applications since 2025. [Evidence and definitions](docs/CLAIMS_AND_EVIDENCE.md).
