@@ -1,7 +1,24 @@
-# GuardRail
+<h1 align="center">GuardRail</h1>
 
-Pre-execution security guards for AI coding agents.
-Open source. Production-grade patterns. EU AI Act ready.
+<p align="center">
+  Pre-execution security guards for AI coding agents.<br>
+  Open source. Production-grade patterns. EU AI Act ready.
+</p>
+
+<p align="center">
+  <a href="https://github.com/FvdHMBAI/guardrail/stargazers"><img src="https://img.shields.io/github/stars/FvdHMBAI/guardrail?style=social" alt="GitHub Stars"></a>&nbsp;
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>&nbsp;
+  <a href="https://github.com/FvdHMBAI/guardrail/releases/latest"><img src="https://img.shields.io/github/v/release/FvdHMBAI/guardrail" alt="Latest Release"></a>&nbsp;
+  <a href="https://github.com/FvdHMBAI/guardrail/issues"><img src="https://img.shields.io/github/issues/FvdHMBAI/guardrail" alt="Issues"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quickstart</a> &bull;
+  <a href="#core-guards-mit">Core Guards</a> &bull;
+  <a href="#guardrail-pro">Pro</a> &bull;
+  <a href="#eu-ai-act-compliance">EU AI Act</a> &bull;
+  <a href="#contributing">Contributing</a>
+</p>
 
 **Works with:** Claude Code, Cursor, GitHub Copilot, Windsurf
 
@@ -69,7 +86,7 @@ Plus: PEN-test framework, EU AI Act compliance reports (PDF), audit trail.
 
 **Pricing:** EUR 20/dev/month | EUR 5,000 compliance kit
 
-Learn more: guardrail.dev/pro
+Learn more: guardrail.promptandbuild.de
 
 ## Configuration
 
@@ -168,12 +185,16 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## Contributing
 
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
 Built by [Prompt & Build](https://promptandbuild.de). Derived from
 production patterns running 100+ guards across 15 applications.
+
+<p align="center">
+  If GuardRail is useful to you, consider giving it a <a href="https://github.com/FvdHMBAI/guardrail">star</a>. It helps others find it.
+</p>
 
 ## Disclaimer
 
