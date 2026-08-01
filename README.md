@@ -1,6 +1,24 @@
-# GuardRail
+<h1 align="center">GuardRail</h1>
 
-Pre-execution security guards for AI coding agents.
+<p align="center">
+  Pre-execution security guards for AI coding agents.<br>
+  Open source. Production-grade patterns. EU AI Act ready.
+</p>
+
+<p align="center">
+  <a href="https://github.com/FvdHMBAI/guardrail/stargazers"><img src="https://img.shields.io/github/stars/FvdHMBAI/guardrail?style=social" alt="GitHub Stars"></a>&nbsp;
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>&nbsp;
+  <a href="https://github.com/FvdHMBAI/guardrail/releases/latest"><img src="https://img.shields.io/github/v/release/FvdHMBAI/guardrail" alt="Latest Release"></a>&nbsp;
+  <a href="https://github.com/FvdHMBAI/guardrail/issues"><img src="https://img.shields.io/github/issues/FvdHMBAI/guardrail" alt="Issues"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quickstart</a> &bull;
+  <a href="#core-guards-mit">Core Guards</a> &bull;
+  <a href="#guardrail-pro">Pro</a> &bull;
+  <a href="#eu-ai-act-compliance">EU AI Act</a> &bull;
+  <a href="#contributing">Contributing</a>
+</p>
 
 <p align="center">
   <img src="docs/demo.svg" alt="GuardRail demo" width="680">
@@ -58,7 +76,7 @@ that basic pattern matching misses.
 
 Plus: PEN-test framework (50+ attack patterns), priority support, compliance kit.
 
-**EUR 29/dev/month** | [Get started](https://guardrail.promptandbuild.de)
+**EUR 20/dev/month** | [Get started](https://guardrail.promptandbuild.de) | EUR 5,000 compliance kit
 
 ## Configuration
 
@@ -182,7 +200,28 @@ point cannot offer the same blocking guarantee.
 
 MIT. See [LICENSE](LICENSE).
 
+## Security
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Browse [good first issues](https://github.com/FvdHMBAI/guardrail/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or join [Discussions](https://github.com/FvdHMBAI/guardrail/discussions).
+
+## Disclaimer
+
+GuardRail reduces risk but does not guarantee complete protection. Pattern-based
+guards cannot catch every possible attack vector. GuardRail is not a substitute
+for security audits, penetration testing, or compliance certification. Use it as
+one layer in a defense-in-depth strategy.
+
 ---
 
-Built by [Prompt & Build](https://promptandbuild.de).
-Patterns extracted from production systems running 100+ guards across 15 applications since 2025.
+<p align="center">
+  Built by <a href="https://promptandbuild.de">Prompt & Build</a>.<br>
+  Patterns extracted from production systems running 100+ guards across 15 applications since 2025.
+</p>
+
+<p align="center">
+  If GuardRail is useful to you, consider giving it a <a href="https://github.com/FvdHMBAI/guardrail">star</a>. It helps others find it.
+</p>
