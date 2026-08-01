@@ -20,9 +20,6 @@ GUARDRAIL_HOME="${GUARDRAIL_HOME:-$HOME/.guardrail}"
 GUARDRAIL_CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
 
 # --- Guards ---
-# Comma-separated list of enabled core guards (empty = all core guards)
-GUARDRAIL_ENABLED_GUARDS="${GUARDRAIL_ENABLED_GUARDS:-}"
-
 # Directory for custom guards (loaded after core guards)
 GUARDRAIL_CUSTOM_GUARDS_DIR="${GUARDRAIL_CUSTOM_GUARDS_DIR:-./custom-guards}"
 
@@ -44,8 +41,8 @@ GUARDRAIL_PROTECTED_BRANCHES="${GUARDRAIL_PROTECTED_BRANCHES:-main master produc
 # Space-separated list of paths that should never be deleted/overwritten
 GUARDRAIL_PROTECTED_PATHS="${GUARDRAIL_PROTECTED_PATHS:-/home /etc /var/lib/docker /var/lib/postgresql}"
 
-# Protected services (blocked from kill/stop)
-GUARDRAIL_PROTECTED_SERVICES="${GUARDRAIL_PROTECTED_SERVICES:-sshd nginx postgres docker containerd}"
+# Critical services (blocked from kill/stop)
+GUARDRAIL_CRITICAL_SERVICES="${GUARDRAIL_CRITICAL_SERVICES:-docker sshd ssh traefik postgresql postgres nginx}"
 
 # --- Notifications ---
 # Optional webhook command for critical events (leave empty to disable)

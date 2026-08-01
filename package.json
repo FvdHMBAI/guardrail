@@ -1,19 +1,19 @@
 {
   "name": "guardrail-agent",
-  "version": "0.1.1",
-  "description": "Pre-execution security guards for AI coding agents. EU AI Act ready.",
+  "version": "0.2.6",
+  "description": "Model-independent pre-execution guards with native Claude Code integration.",
   "bin": {
     "guardrail": "./bin/guardrail.sh"
   },
   "scripts": {
-    "test": "./tests/regression.sh",
+    "typecheck": "bash -n bin/guardrail.sh install.sh dispatchers/*.sh lib/*.sh guards/core/*.sh",
+    "test": "./tests/regression.sh && ./tests/adversarial.sh && ./tests/installer-adversarial.sh",
     "postinstall": "echo '\\n  Run: npx guardrail-agent init\\n'"
   },
   "keywords": [
     "ai-safety",
+    "ai-agents",
     "claude-code",
-    "cursor",
-    "copilot",
     "guardrails",
     "security",
     "pre-execution",

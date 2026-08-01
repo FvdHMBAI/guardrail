@@ -9,116 +9,196 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 INSTALL_DIR="$CLAUDE_DIR/hooks/guardrail"
+STAGE_DIR=""
+BACKUP_DIR=""
+SETTINGS_BACKUP=""
+HAD_INSTALL=false
+cleanup_stage() { [ -z "$STAGE_DIR" ] || [ ! -d "$STAGE_DIR" ] || rm -rf "$STAGE_DIR"; }
+trap cleanup_stage EXIT
 
-echo "GuardRail Installer v0.1.0"
-echo "========================="
+# Colors
+if [ -z "${NO_COLOR:-}" ] && [ -t 1 ]; then
+  R=$'\033[0;31m' G=$'\033[0;32m' Y=$'\033[0;33m' B=$'\033[1m' D=$'\033[2m' Z=$'\033[0m'
+else
+  R="" G="" Y="" B="" D="" Z=""
+fi
+
+echo ""
+echo "${B}  GuardRail${Z} ${D}v0.2.6${Z}"
+echo "${D}  Pre-execution security for AI coding agents${Z}"
 echo ""
 
 # Check prerequisites
 if ! command -v jq >/dev/null 2>&1; then
-  echo "ERROR: jq is required but not installed."
-  echo "  macOS: brew install jq"
-  echo "  Linux: sudo apt install jq"
+  echo "  ${R}ERROR${Z} jq is required but not installed."
+  echo "    macOS: ${B}brew install jq${Z}"
+  echo "    Linux: ${B}sudo apt install jq${Z}"
   exit 1
 fi
 
 if [ ! -d "$CLAUDE_DIR" ]; then
-  echo "ERROR: Claude Code config directory not found at $CLAUDE_DIR"
-  echo "  Make sure Claude Code is installed first."
+  echo "  ${R}ERROR${Z} Claude Code config directory not found at $CLAUDE_DIR"
+  echo "    Make sure Claude Code is installed first."
   exit 1
 fi
+STAGE_DIR=$(mktemp -d "$CLAUDE_DIR/.guardrail-stage.XXXXXX")
 
 # Create installation directory
-echo "Installing guards to $INSTALL_DIR ..."
-mkdir -p "$INSTALL_DIR/guards/core"
-mkdir -p "$INSTALL_DIR/guards/custom"
-mkdir -p "$INSTALL_DIR/dispatchers"
-mkdir -p "$INSTALL_DIR/lib"
+mkdir -p "$STAGE_DIR/guards/core"
+mkdir -p "$STAGE_DIR/guards/custom"
+mkdir -p "$STAGE_DIR/dispatchers"
+mkdir -p "$STAGE_DIR/lib"
 
 # Copy ONLY the 10 Core guards (not Premium guards that may exist locally)
 CORE_GUARDS="main_push_guard basic_pii_gate basic_secret_detector destructive_path_guard firewall_flush_guard service_protection_guard mass_update_guard env_dump_detector basic_injection_scanner error_swallow_guard"
 for guard in $CORE_GUARDS; do
-  [ -f "$SCRIPT_DIR/guards/core/${guard}.sh" ] && cp "$SCRIPT_DIR/guards/core/${guard}.sh" "$INSTALL_DIR/guards/core/"
+  if [ ! -f "$SCRIPT_DIR/guards/core/${guard}.sh" ]; then
+    echo "  ${R}ERROR${Z} Required core guard is missing: ${guard}.sh"
+    exit 1
+  fi
+  cp "$SCRIPT_DIR/guards/core/${guard}.sh" "$STAGE_DIR/guards/core/"
 done
-cp -r "$SCRIPT_DIR/dispatchers/"*.sh "$INSTALL_DIR/dispatchers/"
-cp -r "$SCRIPT_DIR/lib/"*.sh "$INSTALL_DIR/lib/"
-cp "$SCRIPT_DIR/guardrail.config.sh" "$INSTALL_DIR/"
+cp -r "$SCRIPT_DIR/dispatchers/"*.sh "$STAGE_DIR/dispatchers/"
+cp -r "$SCRIPT_DIR/lib/"*.sh "$STAGE_DIR/lib/"
+cp "$SCRIPT_DIR/guardrail.config.sh" "$STAGE_DIR/"
+if [ -d "$INSTALL_DIR/guards/custom" ]; then
+  cp -r "$INSTALL_DIR/guards/custom/." "$STAGE_DIR/guards/custom/"
+fi
 
 # Make executable
-chmod +x "$INSTALL_DIR/dispatchers/"*.sh
-chmod +x "$INSTALL_DIR/guards/core/"*.sh 2>/dev/null || true
+chmod +x "$STAGE_DIR/dispatchers/"*.sh
+chmod +x "$STAGE_DIR/guards/core/"*.sh 2>/dev/null || true
 
-GUARD_COUNT=$(find "$INSTALL_DIR/guards/core" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
+GUARD_COUNT=$(find "$STAGE_DIR/guards/core" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$GUARD_COUNT" -ne 10 ]; then
+  echo "  ${R}ERROR${Z} Expected exactly 10 core guards, found $GUARD_COUNT."
+  exit 1
+fi
+
+echo "  ${G}+${Z} Installed ${B}$GUARD_COUNT${Z} core guards"
+
+# Verify the staged dispatcher before replacing a working installation.
+STAGE_VERIFY=$(
+  printf '%s' '{"session_id":"install-check","tool_input":{"command":"git push origin main"}}' |
+    GUARDRAIL_LOG_DIR="$STAGE_DIR/logs" GUARDRAIL_AUDIT_LOG="$STAGE_DIR/audit.log" \
+    bash "$STAGE_DIR/dispatchers/pre-bash.sh"
+)
+STAGE_REASON=$(printf '%s' "$STAGE_VERIFY" | jq -r '.hookSpecificOutput.permissionDecisionReason // ""')
+STAGE_ALLOW=$(
+  printf '%s' '{"session_id":"install-check","tool_input":{"command":"npm test"}}' |
+    GUARDRAIL_LOG_DIR="$STAGE_DIR/logs" GUARDRAIL_AUDIT_LOG="$STAGE_DIR/audit.log" \
+    bash "$STAGE_DIR/dispatchers/pre-bash.sh"
+)
+if [ "$(printf '%s' "$STAGE_VERIFY" | jq -r '.hookSpecificOutput.permissionDecision // "missing"')" != "deny" ] \
+  || [[ "$STAGE_REASON" != MAIN-PUSH-GUARD:* ]] \
+  || [ "$(printf '%s' "$STAGE_ALLOW" | jq -r '.hookSpecificOutput.permissionDecision // "missing"')" != "allow" ]; then
+  echo "  ${R}ERROR${Z} Staged hook verification failed. Existing installation was not changed."
+  exit 1
+fi
+
+if [ -f "$SETTINGS_FILE" ]; then
+  SETTINGS_BACKUP=$(mktemp "$CLAUDE_DIR/.settings-backup.XXXXXX")
+  cp "$SETTINGS_FILE" "$SETTINGS_BACKUP"
+fi
+rollback_install() {
+  if [ -n "$SETTINGS_BACKUP" ] && [ -f "$SETTINGS_BACKUP" ]; then
+    cp "$SETTINGS_BACKUP" "$SETTINGS_FILE" 2>/dev/null || true
+  else
+    rm -f "$SETTINGS_FILE"
+  fi
+  rm -rf "$INSTALL_DIR"
+  if [ "$HAD_INSTALL" = "true" ] && [ -n "$BACKUP_DIR" ] && [ -d "$BACKUP_DIR" ]; then
+    mv "$BACKUP_DIR" "$INSTALL_DIR"
+  fi
+}
+
+if [ -d "$INSTALL_DIR" ]; then
+  HAD_INSTALL=true
+  BACKUP_DIR="${INSTALL_DIR}.backup.$(date +%s)"
+  mv "$INSTALL_DIR" "$BACKUP_DIR"
+fi
+mkdir -p "$(dirname "$INSTALL_DIR")"
+mv "$STAGE_DIR" "$INSTALL_DIR"
+trap 'rollback_install' ERR
 
 # Update Claude Code settings
-echo "Configuring Claude Code hooks ..."
-
 if [ ! -f "$SETTINGS_FILE" ]; then
   echo '{}' > "$SETTINGS_FILE"
 fi
 
-# Build hook entries
 PRE_BASH="$INSTALL_DIR/dispatchers/pre-bash.sh"
 POST_BASH="$INSTALL_DIR/dispatchers/post-bash.sh"
 POST_EDIT="$INSTALL_DIR/dispatchers/post-edit.sh"
 
-# Use jq to add hooks without overwriting existing ones
 TEMP_SETTINGS=$(mktemp)
 jq --arg pre "$PRE_BASH" --arg post "$POST_BASH" --arg edit "$POST_EDIT" '
   .hooks //= {} |
   .hooks.PreToolUse //= [] |
   .hooks.PostToolUse //= [] |
-
-  # Add pre-bash dispatcher if not already present
-  (if (.hooks.PreToolUse | map(select(.command == $pre)) | length) == 0
-   then .hooks.PreToolUse += [{"matcher": "Bash", "command": $pre}]
+  (if (.hooks.PreToolUse | any(.hooks[]?.command == $pre)) | not
+   then .hooks.PreToolUse += [{"matcher": "Bash", "hooks": [{"type": "command", "command": $pre}]}]
    else . end) |
-
-  # Add post-bash dispatcher if not already present
-  (if (.hooks.PostToolUse | map(select(.command == $post)) | length) == 0
-   then .hooks.PostToolUse += [{"matcher": "Bash", "command": $post}]
+  (if (.hooks.PostToolUse | any(.hooks[]?.command == $post)) | not
+   then .hooks.PostToolUse += [{"matcher": "Bash", "hooks": [{"type": "command", "command": $post}]}]
    else . end) |
-
-  # Add post-edit dispatcher if not already present
-  (if (.hooks.PostToolUse | map(select(.command == $edit)) | length) == 0
-   then .hooks.PostToolUse += [{"matcher": "Write|Edit", "command": $edit}]
+  (if (.hooks.PostToolUse | any(.hooks[]?.command == $edit)) | not
+   then .hooks.PostToolUse += [{"matcher": "Write|Edit", "hooks": [{"type": "command", "command": $edit}]}]
    else . end)
 ' "$SETTINGS_FILE" > "$TEMP_SETTINGS"
 
 if [ -s "$TEMP_SETTINGS" ]; then
   mv "$TEMP_SETTINGS" "$SETTINGS_FILE"
+  echo "  ${G}+${Z} Configured Claude Code hooks"
 else
   rm -f "$TEMP_SETTINGS"
-  echo "WARNING: Could not update settings.json. Add hooks manually."
+  rollback_install
+  echo "  ${R}ERROR${Z} Could not update settings.json. Previous installation restored."
+  exit 1
 fi
 
-# Run regression tests
-echo ""
-echo "Running regression tests ..."
+# Run regression tests quietly
 if [ -f "$SCRIPT_DIR/tests/regression.sh" ]; then
-  if bash "$SCRIPT_DIR/tests/regression.sh"; then
-    echo ""
-    echo "All tests passed."
+  if GUARDRAIL_SKIP_INSTALLER_TEST=true bash "$SCRIPT_DIR/tests/regression.sh" > /dev/null 2>&1; then
+    echo "  ${G}+${Z} All regression tests passed"
   else
-    echo ""
-    echo "WARNING: Some tests failed. Check the output above."
+    rollback_install
+    echo "  ${R}ERROR${Z} Regression tests failed. GuardRail was installed but is not declared active."
+    echo "    Run ${B}guardrail test${Z} for details."
+    exit 1
   fi
-else
-  echo "No regression tests found."
 fi
 
+# Verify the installed dispatcher, not only the source-tree guard functions.
+VERIFY_RESULT=$(
+  printf '%s' '{"session_id":"install-check","tool_input":{"command":"git push origin main"}}' |
+    bash "$PRE_BASH"
+)
+VERIFY_DECISION=$(printf '%s' "$VERIFY_RESULT" | jq -r '.hookSpecificOutput.permissionDecision // "missing"')
+if [ "$VERIFY_DECISION" != "deny" ]; then
+  rollback_install
+  echo "  ${R}ERROR${Z} Installed hook verification failed. GuardRail is not active."
+  exit 1
+fi
+trap - ERR
+if [ -n "$SETTINGS_BACKUP" ]; then
+  rm -f "$SETTINGS_BACKUP"
+fi
+if [ -n "$BACKUP_DIR" ] && [ -d "$BACKUP_DIR" ]; then
+  rm -rf "$BACKUP_DIR"
+fi
+echo "  ${G}+${Z} Installed hook blocked the release safety probe"
+
 echo ""
-echo "========================="
-echo "GuardRail installed successfully!"
-echo "  $GUARD_COUNT core guards active"
-echo "  Config: $INSTALL_DIR/guardrail.config.sh"
-echo "  Audit log: \${GUARDRAIL_AUDIT_LOG:-./guardrail-audit.log}"
+echo "  ${G}GuardRail is active.${Z} Every command is now guarded."
+echo ""
+echo "  ${D}Try it:${Z}  ${B}guardrail status${Z}"
+echo "  ${D}Config:${Z} $INSTALL_DIR/guardrail.config.sh"
+echo ""
+echo "  ${D}Like it?${Z}      ${B}gh repo star FvdHMBAI/guardrail${Z}"
+echo "  ${D}Questions?${Z}    ${B}github.com/FvdHMBAI/guardrail/discussions${Z}"
 echo ""
 echo "Next steps:"
 echo "  1. Customize $INSTALL_DIR/guardrail.config.sh"
 echo "  2. Add custom guards to $INSTALL_DIR/guards/custom/"
 echo "  3. Run 'guardrail test' to verify"
 echo "  4. Run 'guardrail status' to check active guards"
-echo ""
-echo "Like it?      gh repo star FvdHMBAI/guardrail"
-echo "Questions?    github.com/FvdHMBAI/guardrail/discussions"
