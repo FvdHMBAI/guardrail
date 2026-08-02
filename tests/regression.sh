@@ -1,6 +1,6 @@
 #!/bin/bash
 # GuardRail Core Guard Regression Tests
-# Tests ONLY the 10 Core guards (MIT).
+# Tests the 18 Core guards (MIT) + 2 Premium guards.
 # License: MIT
 # Usage: bash tests/regression.sh
 
@@ -61,9 +61,7 @@ echo "=== GuardRail Core Regression Tests ==="
 
 # Phase 1: Syntax
 echo "Phase 1: Syntax"
-for g in "$GUARDS_DIR"/basic_*.sh "$GUARDS_DIR"/main_push_guard.sh "$GUARDS_DIR"/destructive_path_guard.sh \
-         "$GUARDS_DIR"/firewall_flush_guard.sh "$GUARDS_DIR"/service_protection_guard.sh \
-         "$GUARDS_DIR"/mass_update_guard.sh "$GUARDS_DIR"/env_dump_detector.sh "$GUARDS_DIR"/error_swallow_guard.sh; do
+for g in "$GUARDS_DIR"/*.sh; do
   [ -f "$g" ] || continue
   bash -n "$g" 2>/dev/null && ok || fail "SYNTAX: $(basename "$g")"
 done
@@ -133,8 +131,68 @@ run_edit error_swallow_guard.sh hook_error_swallow_guard "$TMP"; check swallow D
 rm -f "$TMP"
 run_edit error_swallow_guard.sh hook_error_swallow_guard "/home/p/utils.ts"; check swallow SILENT "non-critical"
 
-# Phase 12: real dispatcher contract
-echo "Phase 12: dispatcher end-to-end"
+# Phase 12: force_push_guard
+echo "Phase 12: force_push_guard"
+run_pre force_push_guard.sh hook_force_push_guard "git push --force origin main"; check fp DENY "force push main"
+run_pre force_push_guard.sh hook_force_push_guard "git push --force-with-lease origin feat"; check fp DENY "force-with-lease"
+run_pre force_push_guard.sh hook_force_push_guard "git push -f origin dev"; check fp DENY "short flag"
+run_pre force_push_guard.sh hook_force_push_guard "git push origin develop"; check fp PASS "normal push"
+
+# Phase 13: wandering_detector
+echo "Phase 13: wandering_detector"
+rm -f /tmp/guardrail/wandering-test-$$ 2>/dev/null
+run_post wandering_detector.sh hook_wandering_detector "curl localhost:3000" "connection refused"; check wand PASS "first failure"
+GUARDRAIL_STATE_DIR="/tmp/guardrail" SESSION_ID="test-$$"
+echo "2" > "/tmp/guardrail/wandering-test-$$"
+run_post wandering_detector.sh hook_wandering_detector "curl localhost:3001" "connection refused"; check wand DETECT "third failure"
+rm -f "/tmp/guardrail/wandering-test-$$" 2>/dev/null
+
+# Phase 14: self_correction_loop
+echo "Phase 14: self_correction_loop"
+run_post self_correction_loop.sh hook_self_correction_loop "npm run build" "Build failed: Cannot find module"; check scl DETECT "build failure"
+run_post self_correction_loop.sh hook_self_correction_loop "npm test" "FAIL test/auth.test.ts"; check scl DETECT "test failure"
+run_post self_correction_loop.sh hook_self_correction_loop "node app.js" "TypeError: undefined is not a function"; check scl DETECT "runtime error"
+run_post self_correction_loop.sh hook_self_correction_loop "npm test" "0 errors, 12 tests passed"; check scl SILENT "all passed"
+run_post self_correction_loop.sh hook_self_correction_loop "npm test" "Tests: 42 passed, 0 failed"; check scl SILENT "success"
+
+# Phase 15: self_bypass_guard
+echo "Phase 15: self_bypass_guard"
+run_pre self_bypass_guard.sh hook_self_bypass_guard "touch /tmp/guardrail-gate-approve"; check sbg DENY "touch gate file"
+run_pre self_bypass_guard.sh hook_self_bypass_guard "echo ok > /tmp/guardrail-gate-approve"; check sbg DENY "redirect to gate"
+run_pre self_bypass_guard.sh hook_self_bypass_guard "tee /tmp/guardrail-gate-pass < /dev/null"; check sbg DENY "tee gate file"
+run_pre self_bypass_guard.sh hook_self_bypass_guard "touch /tmp/myapp.pid"; check sbg PASS "unrelated touch"
+
+# Phase 16: large_diff_guard
+echo "Phase 16: large_diff_guard"
+run_pre large_diff_guard.sh hook_large_diff_guard "npm test"; check ldg PASS "non-commit"
+
+# Phase 17: credential_leak_guard
+echo "Phase 17: credential_leak_guard"
+run_post credential_leak_guard.sh hook_credential_leak_guard "cat config" "AKIAIOSFODNN7EXAMPLE"; check cred DETECT "AWS key"
+run_post credential_leak_guard.sh hook_credential_leak_guard "cat config" "sk_live_1234567890abcdefghij"; check cred DETECT "Stripe key"
+run_post credential_leak_guard.sh hook_credential_leak_guard "cat config" "ghp_1234567890abcdefghijklmnopqrstuvwx"; check cred DETECT "GitHub token"
+run_post credential_leak_guard.sh hook_credential_leak_guard "cat config" "sk-ant-abcdefghijklmnopqrst1234"; check cred DETECT "Anthropic key"
+run_post credential_leak_guard.sh hook_credential_leak_guard "cat config" "-----BEGIN RSA PRIVATE KEY-----"; check cred DETECT "private key"
+run_post credential_leak_guard.sh hook_credential_leak_guard "echo hello" "Just normal output"; check cred SILENT "clean output"
+
+# Phase 18: deploy_branch_guard
+echo "Phase 18: deploy_branch_guard"
+run_pre deploy_branch_guard.sh hook_deploy_branch_guard "npm test"; check dbg PASS "non-deploy"
+
+# Phase 19: tool_call_budget_guard
+echo "Phase 19: tool_call_budget_guard"
+rm -f /tmp/guardrail/tool-calls-test-$$ 2>/dev/null
+run_pre tool_call_budget_guard.sh hook_tool_call_budget_guard "ls"; check tcb PASS "within budget"
+
+# Phase 20: context_window_guard
+echo "Phase 20: context_window_guard"
+run_pre context_window_guard.sh hook_context_window_guard "docker logs mycontainer"; check cwg PASS "docker logs warns"
+run_pre context_window_guard.sh hook_context_window_guard "docker logs --tail 50 mycontainer"; check cwg PASS "docker logs with tail"
+run_pre context_window_guard.sh hook_context_window_guard "git log"; check cwg PASS "unbounded git log"
+run_pre context_window_guard.sh hook_context_window_guard "git log -20 --oneline"; check cwg PASS "bounded git log"
+
+# Phase 21: real dispatcher contract
+echo "Phase 21: dispatcher end-to-end"
 run_dispatcher() {
   local payload="$1"
   RESULT=$(printf '%s' "$payload" | bash "$REPO_DIR/dispatchers/pre-bash.sh")
@@ -166,9 +224,9 @@ check_dispatcher "missing command fails closed" "deny"
 run_dispatcher 'not-json'
 check_dispatcher "malformed JSON fails closed" "deny"
 
-# Phase 13: installer schema
+# Phase 22: installer schema
 if [ "${GUARDRAIL_SKIP_INSTALLER_TEST:-false}" != "true" ]; then
-echo "Phase 13: installer schema"
+echo "Phase 22: installer schema"
 INSTALL_TEST_DIR=$(mktemp -d /tmp/guardrail-install-test.XXXXXX)
 GUARDRAIL_CLAUDE_DIR="$INSTALL_TEST_DIR" \
 GUARDRAIL_LOG_DIR="$INSTALL_TEST_DIR/logs" \
@@ -190,8 +248,8 @@ for expected in \
 done
 fi
 
-# Phase 14: Shield v2 contract and fail-unverified behavior
-echo "Phase 14: Shield v2 compatibility"
+# Phase 23: Shield v2 contract and fail-unverified behavior
+echo "Phase 23: Shield v2 compatibility"
 source "$REPO_DIR/guards/premium/post_pii_shield_guard.sh"
 add_context() { RESULT="$1"; }
 guardrail_audit() { :; }
