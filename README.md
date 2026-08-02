@@ -1,5 +1,7 @@
 <h1 align="center">GuardRail</h1>
 
+[![Part of AgentStack](https://img.shields.io/badge/Part%20of-AgentStack-blue?style=flat-square)](https://github.com/FvdHMBAI/agent-stack)
+
 <p align="center">
   <strong>Pre-execution security for AI coding agents.</strong><br>
   Guardrails AI validates what LLMs say. GuardRail blocks what AI agents <em>do</em>.<br>
