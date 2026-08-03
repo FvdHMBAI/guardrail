@@ -26,6 +26,12 @@
 
 ---
 
+<p align="center">
+  <img src="demo/demo.gif" alt="GuardRail Demo: blocking dangerous commands in real-time" width="720">
+</p>
+
+---
+
 ## Quick Start
 
 ```bash
