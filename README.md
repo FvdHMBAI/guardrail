@@ -26,9 +26,31 @@
 
 ---
 
+## Quick Start
+
+```bash
+npx guardrail-agent init
+```
+
+That's it. One command. Every command your AI agent runs is now guarded. No config needed.
+
+```bash
+guardrail status     # See active guards
+guardrail pentest    # Run attack simulation
+guardrail disable    # Temporarily disable (for debugging)
+guardrail enable     # Re-enable
+guardrail uninstall  # Clean removal
+```
+
+Works with **Claude Code** out of the box (native hook support). Agent-runtime adapters for Codex CLI and Gemini CLI are planned.
+
+**Requirements:** bash 4+, jq, openssl. Linux or macOS.
+
+---
+
 ## The Problem
 
-Your AI coding agent runs commands on your machine. It can delete files, push to production, leak secrets, drop database tables, and burn through your API budget in a runaway loop. Most safety tools validate prompts or outputs — they catch problems **after** they happen.
+Your AI coding agent runs commands on your machine. It can delete files, push to production, leak secrets, drop database tables, and burn through your API budget in a runaway loop. Most safety tools validate prompts or outputs. They catch problems **after** they happen.
 
 GuardRail catches them **before the command executes**.
 
@@ -44,22 +66,10 @@ Agent runs: rm -rf /home/developer/project
 ```
 
 Real incidents from our production system that GuardRail stopped:
-- `git reset --hard` during debugging — would have wiped 3 hours of uncommitted work
-- `DELETE FROM profiles` without WHERE clause — would have deleted all user data
+- `git reset --hard` during debugging. Would have wiped 3 hours of uncommitted work
+- `DELETE FROM profiles` without WHERE clause. Would have deleted all user data
 - Agent tried to `touch /tmp/approval-gate` to bypass its own safety checks
 - 47 consecutive failed curl attempts (wrong port) before the wandering detector intervened
-
-## Quick Start
-
-```bash
-npx guardrail-agent init
-```
-
-That's it. Every command your AI agent runs is now guarded. No config needed.
-
-Works with **Claude Code** out of the box (native hook support). Agent-runtime adapters for Codex CLI and Gemini CLI are planned.
-
-**Requirements:** bash 4+, jq. Linux or macOS.
 
 ## 18 Core Guards
 
@@ -260,7 +270,17 @@ These controls do not create legal compliance alone. Full mapping available in G
 
 ## Security Model
 
-GuardRail is an additional enforcement layer, not a sandbox. It catches accidental or plainly expressed dangerous actions by an agent operating as the current user. It does not contain a malicious agent that can rewrite its own hooks. Keep OS permissions, branch protection, and network controls as your primary boundaries.
+GuardRail is a **seatbelt, not a jail cell**. It is an additional enforcement layer, not a sandbox.
+
+**What it stops:** Accidental damage and most optimization-driven bypasses. AI agents routinely try to work around obstacles to complete their task. They don't plan an escape, but they will try `python3 -c "..."` when `rm` is blocked, or write a gate file when one is missing. GuardRail catches these patterns with layered defenses: interactive terminal checks, HMAC-signed tokens, pattern-based command blocking, and audit logging.
+
+**What it does not stop:** A determined attacker with same-user access who deliberately crafts novel bypass techniques. Since the agent runs as the same OS user, true isolation requires OS-level controls (separate users, containers, network policies).
+
+**Your security stack should be:**
+1. **GuardRail**: catches 99% of real incidents (accidental + optimization-driven)
+2. **Branch protection**: prevents force-pushes even if the guard is bypassed
+3. **OS permissions**: separate users for production databases
+4. **Network controls**: restrict what the agent can reach
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
