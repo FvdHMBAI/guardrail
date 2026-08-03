@@ -20,25 +20,50 @@ deny() {
   exit 0
 }
 
-if [ ! -f "$LIB_DIR/guardrail-common.sh" ] || ! source "$LIB_DIR/guardrail-common.sh"; then
-  deny "GUARDRAIL INTEGRITY ERROR: common safety library could not be loaded."
-fi
-
-# A security boundary must fail closed. A Bash hook without a valid command is
-# not a harmless no-op: it means the dispatcher cannot inspect the action.
+# Parse command early (needed before .disabled check for self-bypass protection)
 if ! printf '%s' "$INPUT" | jq -e '
   type == "object"
   and (.tool_input | type == "object")
   and (.tool_input.command | type == "string")
   and (.tool_input.command | length > 0)
 ' >/dev/null 2>&1; then
-  SESSION_ID="invalid-input"
-  guardrail_audit "Dispatcher" "Malformed Bash hook payload blocked" "$INPUT"
   deny "GUARDRAIL INPUT ERROR: malformed or empty Bash hook payload. Command execution was blocked because it could not be inspected."
 fi
 
 CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command')
 SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // "default"')
+
+# Check disable flag: skip guards only if HMAC-valid and not expired (30 min max)
+DISABLE_KEY_FILE="$HOME/.guardrail/disable.key"
+if [ -f "$SCRIPT_DIR/../.disabled" ]; then
+  DISABLE_LINE=$(head -1 "$SCRIPT_DIR/../.disabled" 2>/dev/null)
+  DISABLE_TS=$(printf '%s' "$DISABLE_LINE" | awk '{print $1}')
+  DISABLE_TOKEN=$(printf '%s' "$DISABLE_LINE" | awk '{print $2}')
+  if [[ "$DISABLE_TS" =~ ^[0-9]+$ ]] && [ -n "$DISABLE_TOKEN" ] && [ -f "$DISABLE_KEY_FILE" ]; then
+    EXPECTED_TOKEN=$(printf '%s' "$DISABLE_TS" | openssl dgst -sha256 -hmac "$(cat "$DISABLE_KEY_FILE")" 2>/dev/null | awk '{print $NF}' | cut -c1-32)
+    NOW_TS=$(date +%s)
+    if [ "$DISABLE_TOKEN" != "$EXPECTED_TOKEN" ]; then
+      rm -f "$SCRIPT_DIR/../.disabled"
+    elif [ "$DISABLE_TS" -gt "$NOW_TS" ]; then
+      rm -f "$SCRIPT_DIR/../.disabled"
+    else
+      DISABLE_AGE=$(( NOW_TS - DISABLE_TS ))
+      if [ "$DISABLE_AGE" -lt 1800 ]; then
+        echo "$ALLOW"
+        exit 0
+      else
+        rm -f "$SCRIPT_DIR/../.disabled"
+      fi
+    fi
+  else
+    rm -f "$SCRIPT_DIR/../.disabled"
+  fi
+fi
+
+if [ ! -f "$LIB_DIR/guardrail-common.sh" ] || ! source "$LIB_DIR/guardrail-common.sh"; then
+  deny "GUARDRAIL INTEGRITY ERROR: common safety library could not be loaded."
+fi
+
 CMD_SHELL="$CMD"
 WARNINGS=""
 
@@ -67,12 +92,14 @@ _guardrail_load_guard "basic_secret_detector.sh"
 _guardrail_load_guard "destructive_path_guard.sh"
 _guardrail_load_guard "firewall_flush_guard.sh"
 _guardrail_load_guard "service_protection_guard.sh"
+_guardrail_load_guard "self_bypass_guard.sh"
 _guardrail_run hook_main_push_guard
 _guardrail_run hook_basic_pii_gate
 _guardrail_run hook_basic_secret_detector
 _guardrail_run hook_destructive_path_guard
 _guardrail_run hook_firewall_flush_guard
 _guardrail_run hook_service_protection_guard
+_guardrail_run hook_self_bypass_guard
 CMD_LOWER=$(printf '%s' "$CMD" | tr '[:upper:]' '[:lower:]')
 case "$CMD_LOWER" in
   *"psql"*|*"pgcli"*|*"docker exec"*psql*)

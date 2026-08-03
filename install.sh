@@ -77,6 +77,17 @@ fi
 
 echo "  ${G}+${Z} Installed ${B}$GUARD_COUNT${Z} core guards"
 
+# Generate disable secret (prevents agent token forgery)
+DISABLE_KEY_DIR="$HOME/.guardrail"
+DISABLE_KEY_FILE="$DISABLE_KEY_DIR/disable.key"
+if [ ! -f "$DISABLE_KEY_FILE" ]; then
+  mkdir -p "$DISABLE_KEY_DIR"
+  head -c 32 /dev/urandom | base64 | tr -d '\n' > "$DISABLE_KEY_FILE"
+  chmod 600 "$DISABLE_KEY_FILE"
+  chmod 700 "$DISABLE_KEY_DIR"
+  echo "  ${G}+${Z} Generated disable secret"
+fi
+
 # Verify the staged dispatcher before replacing a working installation.
 STAGE_VERIFY=$(
   printf '%s' '{"session_id":"install-check","tool_input":{"command":"git push origin main"}}' |
