@@ -270,7 +270,17 @@ These controls do not create legal compliance alone. Full mapping available in G
 
 ## Security Model
 
-GuardRail is an additional enforcement layer, not a sandbox. It catches accidental or plainly expressed dangerous actions by an agent operating as the current user. It does not contain a malicious agent that can rewrite its own hooks. Keep OS permissions, branch protection, and network controls as your primary boundaries.
+GuardRail is a **seatbelt, not a jail cell**. It is an additional enforcement layer, not a sandbox.
+
+**What it stops:** Accidental damage and most optimization-driven bypasses. AI agents routinely try to work around obstacles to complete their task. They don't plan an escape, but they will try `python3 -c "..."` when `rm` is blocked, or write a gate file when one is missing. GuardRail catches these patterns with layered defenses: interactive terminal checks, HMAC-signed tokens, pattern-based command blocking, and audit logging.
+
+**What it does not stop:** A determined attacker with same-user access who deliberately crafts novel bypass techniques. Since the agent runs as the same OS user, true isolation requires OS-level controls (separate users, containers, network policies).
+
+**Your security stack should be:**
+1. **GuardRail**: catches 99% of real incidents (accidental + optimization-driven)
+2. **Branch protection**: prevents force-pushes even if the guard is bypassed
+3. **OS permissions**: separate users for production databases
+4. **Network controls**: restrict what the agent can reach
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
