@@ -1,15 +1,9 @@
-# Gumroad Listing: GuardRail Pro
+# GuardRail Pro: Sales Page Copy
 
-## Produktname
-GuardRail Pro
+## URL: https://guardrail.promptandbuild.de
+## Preis: 29 EUR/dev/Monat (Stripe)
 
-## Untertitel
-Advanced security guards for AI coding agents. Script analysis, multi-step attack detection, EU AI Act compliance.
-
-## Preis
-29 EUR/dev/Monat
-
-## Beschreibung
+## Copy
 
 ### Your AI agent runs commands on your machine. GuardRail makes sure the dangerous ones never execute.
 
@@ -66,8 +60,4 @@ GuardRail patterns come from a production system running 169+ guards across 15 a
 
 ---
 
-## Tags
-AI, Security, Developer Tools, Claude Code, DevOps, EU AI Act
-
-## Thumbnail-Text
-GuardRail Pro: 48 guards. Script analysis. EU AI Act compliance. Für AI coding agents.
+## Purchase: https://guardrail.promptandbuild.de
