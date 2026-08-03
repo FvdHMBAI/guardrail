@@ -13,7 +13,7 @@ Advanced security guards for AI coding agents. Script analysis, multi-step attac
 
 ### Your AI agent runs commands on your machine. GuardRail makes sure the dangerous ones never execute.
 
-The free version gives you 18 battle-tested guards. GuardRail Pro adds the guards that catch what regex can't.
+The free version gives you 18 battle-tested guards. GuardRail Pro adds the guards that catch what regex cannot.
 
 ### What's in Pro
 
@@ -37,13 +37,13 @@ Guard-to-article mapping for Art. 9 (risk management), Art. 12 (record-keeping),
 | | Free (MIT) | Pro |
 |---|---|---|
 | Core guards | 18 | 18 |
-| Script content analysis | - | Yes |
-| Multi-step detection | - | Yes |
-| PII Shield v2 | - | Yes |
-| Supply chain audit | - | Yes |
-| EU AI Act reports | - | Yes |
-| Penetration test (50+ patterns) | - | Yes |
-| Priority support | - | Yes |
+| Script content analysis | - | Ja |
+| Multi-step detection | - | Ja |
+| PII Shield v2 | - | Ja |
+| Supply chain audit | - | Ja |
+| EU AI Act reports | - | Ja |
+| Penetration test (50+ patterns) | - | Ja |
+| Priority support | - | Ja |
 | Guard count | 18 | 48+ |
 
 ### Who is this for
@@ -51,7 +51,7 @@ Guard-to-article mapping for Art. 9 (risk management), Art. 12 (record-keeping),
 - Solo developers running AI agents on production servers
 - Teams using Claude Code, Cursor, or Copilot with shell access
 - Companies that need EU AI Act documentation for their AI tooling
-- Anyone who learned the hard way that `DELETE FROM users` doesn't ask "are you sure?"
+- Anyone who wants to catch problems before they happen, not after
 
 ### How it works
 
@@ -62,7 +62,7 @@ Guard-to-article mapping for Art. 9 (risk management), Art. 12 (record-keeping),
 
 ### Built by a practitioner
 
-GuardRail patterns come from a production system running 169+ guards across 15 applications since 2025. Every guard has prevented a real incident. 870 blocked commands per week. This isn't theory.
+GuardRail patterns come from a production system running 169+ guards across 15 applications since 2025. Every guard exists because it prevents a real pattern. 870 blocked commands per week. This is not theory.
 
 ---
 
@@ -70,4 +70,4 @@ GuardRail patterns come from a production system running 169+ guards across 15 a
 AI, Security, Developer Tools, Claude Code, DevOps, EU AI Act
 
 ## Thumbnail-Text
-GuardRail Pro: 48 guards. Script analysis. EU AI Act compliance. For AI coding agents.
+GuardRail Pro: 48 guards. Script analysis. EU AI Act compliance. Für AI coding agents.

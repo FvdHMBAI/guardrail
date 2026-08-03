@@ -1,34 +1,32 @@
 # LinkedIn Post: GuardRail Launch
 
-Mein KI-Agent hat letztes Jahr eine Produktions-Datenbank gelöscht.
+82 Docker containers. 23 databases. 15 applications. One server. One developer.
 
-Nicht absichtlich. Er wollte "aufräumen" und hat DELETE FROM profiles WHERE 1=1 ausgeführt. Alle Nutzerdaten weg.
+My AI agents have full shell access. Every day.
 
-Seitdem läuft jeder Befehl durch GuardRail.
+This works because every command runs through GuardRail before it executes.
 
-18 Sicherheits-Guards, die zwischen Agent und Shell sitzen. Gefährlicher Befehl? Geblockt. Sicherer Befehl? Läuft normal durch.
+18 security guards that sit between agent and shell. Dangerous command? Blocked. Safe command? Runs normally.
 
-Was ich in 12 Monaten Produktion gelernt habe:
+What I learned running this in production for 12 months:
 
-KI-Agenten "planen" keine Umgehung. Aber sie optimieren. Wenn rm -rf geblockt wird, versuchen sie python3 -c "shutil.rmtree(...)". Wenn ein Gate fehlt, schreiben sie es selbst. Nicht böswillig. Einfach task-orientiert.
+AI agents don't "plan" to bypass your controls. But they optimize. When rm -rf is blocked, they try python3 -c "shutil.rmtree(...)". When a gate file is missing, they write it themselves. Not malicious. Just task-oriented.
 
-Diese Woche: 870 geblockte Befehle. Der Self-Bypass-Guard allein feuert 5-10 mal täglich.
+This week: 870 blocked commands. The self-bypass guard alone fires 5-10 times daily. Every block is a problem that didn't happen.
 
-Mein Stack:
-82 Docker-Container
-23 PostgreSQL-Datenbanken
-169 Guard-Dateien
-96% Enforcement-Rate
+My stack:
+82 Docker containers
+23 PostgreSQL databases
+169 guard files
+96% enforcement rate
 
-Alles auf einem Server. Ein Entwickler.
+GuardRail is now open source (MIT).
+One command: npx guardrail-agent init
 
-GuardRail ist jetzt Open Source (MIT).
-Ein Befehl: npx guardrail-agent init
+Pure bash + jq. No Python, no ML models, no API calls. Each guard runs in under 1ms. Works natively with Claude Code.
 
-Pure Bash + jq. Kein Python, keine ML-Modelle, keine API-Calls. Jeder Guard läuft in unter 1ms. Funktioniert nativ mit Claude Code.
+Who here lets AI agents run on production systems?
 
-Wer von euch lässt KI-Agenten auf Produktionssystemen laufen?
+What are your strategies for keeping agents safe?
 
-Was ist das Schlimmste, das euer Agent bisher angerichtet hat?
-
-#KI #AIAgents #DevOps #Security #OpenSource
+#AI #AIAgents #DevOps #Security #OpenSource
