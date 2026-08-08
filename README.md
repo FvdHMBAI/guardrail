@@ -1,12 +1,10 @@
-<h1 align="center">GuardRail</h1>
-
-[![Part of AgentStack](https://img.shields.io/badge/Part%20of-AgentStack-blue?style=flat-square)](https://github.com/FvdHMBAI/agent-stack)
-
-<p align="center">
-  <strong>Pre-execution security for AI coding agents.</strong><br>
-  Guardrails AI validates what LLMs say. GuardRail blocks what AI agents <em>do</em>.<br>
-  Open source. Battle-tested. The only pre-execution guard system for the agentic era.
-</p>
+<h1 align="center">
+  <br>
+  <img src="https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F-GuardRail-blue?style=for-the-badge&labelColor=0d1117&color=3b82f6" alt="GuardRail" height="40">
+  <br>
+  Pre-execution security for AI coding agents
+  <br>
+</h1>
 
 <p align="center">
   <a href="https://github.com/FvdHMBAI/guardrail/actions"><img src="https://github.com/FvdHMBAI/guardrail/actions/workflows/ci.yml/badge.svg" alt="CI"></a>&nbsp;
@@ -26,9 +24,44 @@
 
 ---
 
+### Last Tuesday, 2:47 AM.
+
+My AI agent tried to mass-delete a production database. **172 guards said no.**
+
+The agent was debugging a slow query. It found the table, decided the data was stale, and ran `DELETE FROM profiles`. No WHERE clause. 23 databases, every single customer record. Gone in one command.
+
+Except it wasn't gone. GuardRail blocked the command before it executed. The agent got a clear error, adjusted its approach, and fixed the actual performance issue instead.
+
+That's the difference between validating what an LLM *says* and blocking what an AI agent *does*.
+
+```
+  ┌──────────────────────────────────────────────────────────────┐
+  │  $ DELETE FROM profiles                                      │
+  │                                                              │
+  │  ✘ BLOCKED by mass_update_guard                              │
+  │    DELETE without WHERE clause on protected table: profiles   │
+  │    Command was NOT executed.                                  │
+  │                                                              │
+  │  172 guards active · 96% enforcement rate · <1ms per guard   │
+  └──────────────────────────────────────────────────────────────┘
+```
+
 <p align="center">
   <img src="demo/demo.gif" alt="GuardRail Demo: blocking dangerous commands in real-time" width="720">
 </p>
+
+---
+
+<table>
+  <tr>
+    <td align="center"><strong>172</strong><br><sub>Active Guards</sub></td>
+    <td align="center"><strong>96%</strong><br><sub>Enforcement Rate</sub></td>
+    <td align="center"><strong>1,048</strong><br><sub>Autonomous Tasks Completed</sub></td>
+    <td align="center"><strong>81</strong><br><sub>Containers Protected</sub></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Numbers from a live production system running 13 applications on a single server. Not a demo.</sub></p>
 
 ---
 
@@ -72,10 +105,10 @@ Agent runs: rm -rf /home/developer/project
 ```
 
 Real incidents from our production system that GuardRail stopped:
-- `git reset --hard` during debugging. Would have wiped 3 hours of uncommitted work
-- `DELETE FROM profiles` without WHERE clause. Would have deleted all user data
-- Agent tried to `touch /tmp/approval-gate` to bypass its own safety checks
-- 47 consecutive failed curl attempts (wrong port) before the wandering detector intervened
+- `git reset --hard` during debugging. Would have wiped 3 hours of uncommitted work.
+- `DELETE FROM profiles` without WHERE clause. Would have deleted all user data.
+- Agent tried to `touch /tmp/approval-gate` to bypass its own safety checks.
+- 47 consecutive failed curl attempts (wrong port) before the wandering detector intervened.
 
 ## 18 Core Guards
 
@@ -104,10 +137,10 @@ All free. All MIT-licensed. All battle-tested.
 | Guard | What it detects | Example |
 |---|---|---|
 | `env_dump_detector` | Environment variable dumps in output (even from obfuscated commands) | 10+ KEY=VALUE lines in output |
-| `basic_injection_scanner` | Prompt injection attempts in command output | "ignore all previous instructions" |
+| `basic_injection_scanner` | Prompt injection attempts in command output | Malicious instruction patterns |
 | `error_swallow_guard` | Empty catch blocks in payment/webhook/cron code | `catch (e) { console.log(e) }` |
 | `credential_leak_guard` | API keys, tokens, private keys in command output | AWS keys, Stripe keys, JWTs, SSH keys |
-| `wandering_detector` | Trial-and-error loops (3+ consecutive failures) | Wrong port → wrong port → wrong port |
+| `wandering_detector` | Trial-and-error loops (3+ consecutive failures) | Wrong port, wrong port, wrong port |
 | `self_correction_loop` | Build/test failures that the agent tries to ignore | `Build failed` followed by "done" |
 
 ## How It Compares
@@ -164,7 +197,7 @@ AI Coding Agent (Claude Code, Cursor, Copilot, ...)
    Audit Log (every decision timestamped + hashed)
 ```
 
-Guards are bash functions. No runtime dependencies beyond bash and jq. Each guard runs in <1ms. The full dispatcher adds <5ms to every command — invisible to the agent.
+Guards are bash functions. No runtime dependencies beyond bash and jq. Each guard runs in <1ms. The full dispatcher adds <5ms to every command, invisible to the agent.
 
 See [docs/architecture.md](docs/architecture.md) for deep dive.
 
@@ -252,15 +285,30 @@ Advanced guards derived from real production incidents:
 
 | Capability | Why it matters |
 |---|---|
-| **Script content analysis** | Agent writes payload to file, then runs it — bypasses command-line guards |
-| **Multi-step attack detection** | Credential scan followed by exfiltration — blocked on step 2 |
-| **PII Shield v2** | ML-powered personal data detection in output (SSN, tax IDs, addresses) |
-| **Supply chain audit** | `npm install` with known-vulnerable or restrictively-licensed packages |
-| **EU AI Act compliance kit** | Guard-to-article mapping, PDF audit reports for regulators |
+| **Script content analysis** | Agent writes payload to file, then runs it. Bypasses command-line guards. |
+| **Multi-step attack detection** | Credential scan followed by exfiltration. Blocked on step 2. |
+| **PII Shield v2** | ML-powered personal data detection in output (SSN, tax IDs, addresses). |
+| **Supply chain audit** | `npm install` with known-vulnerable or restrictively-licensed packages. |
+| **EU AI Act compliance kit** | Guard-to-article mapping, PDF audit reports for regulators. |
 
 Plus: Penetration test framework (50+ attack patterns), priority support, compliance documentation.
 
-**EUR 29/dev/month** | [Get started](https://guardrail.promptandbuild.de)
+<table>
+  <tr>
+    <td align="center">
+      <strong>Pro</strong><br>
+      EUR 29/dev/month<br>
+      <sub>Managed rules, compliance dashboard, priority support</sub><br>
+      <a href="https://guardrail.promptandbuild.de">Get started</a>
+    </td>
+    <td align="center">
+      <strong>Enterprise</strong><br>
+      EUR 49/dev/month<br>
+      <sub>Custom guards, SLA, dedicated onboarding, audit trail export</sub><br>
+      <a href="https://guardrail.promptandbuild.de">Contact us</a>
+    </td>
+  </tr>
+</table>
 
 ## EU AI Act
 
@@ -292,24 +340,42 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## Battle-Tested
 
-GuardRail patterns are extracted from a production system running **170+ guards across 13 applications since 2025**. The public guards are the universal subset — they work for any codebase, any team, any agent.
+GuardRail patterns are extracted from a production system running **172 guards across 13 applications since 2025**. The public guards are the universal subset. They work for any codebase, any team, any agent.
 
 Every guard in this repository has prevented a real incident.
 
+> *"We wanted a community app for our members. Frederik showed us what's possible with AI, and then he just built it. No endless concept phases, just results."*
+> 
+> Sebastian Bendler, Managing Director, Golfpark Gut Wensin
+
 ## Works With
 
-- **Claude Code** — native hook support, zero configuration
-- **Any bash-based agent** — source the dispatcher in your wrapper
+- **Claude Code**: native hook support, zero configuration
+- **Any bash-based agent**: source the dispatcher in your wrapper
 
 Adapters planned for: Codex CLI, Gemini CLI, Aider, Continue.dev
+
+---
+
+## Part of AgentStack
+
+GuardRail is one of five open-source tools that form a complete AI governance stack:
+
+| Tool | What it does |
+|---|---|
+| **[GuardRail](https://github.com/FvdHMBAI/guardrail)** | Pre-execution security (you are here) |
+| **[Model Router](https://github.com/FvdHMBAI/model-router)** | Shell-native LLM routing. One config, every model. |
+| **[NightShift](https://github.com/FvdHMBAI/nightshift)** | Overnight code improvement. Fix lint, types, security while you sleep. |
+| **[Graphify Toolkit](https://github.com/FvdHMBAI/graphify-toolkit)** | Turn any codebase into a queryable knowledge graph. |
+| **[Autonomie OS](https://github.com/FvdHMBAI/autonomie-os)** | Self-improving agent framework. Learns from every session. |
+
+Each tool works standalone. Together, they run a production system with 81 containers, 225 cron jobs, and zero dedicated ops staff.
+
+**Learn the principles behind this stack:** [18 free lessons on KI-Governance](https://lernen.promptandbuild.de)
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Browse [good first issues](https://github.com/FvdHMBAI/guardrail/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
-
-## Part of AgentStack
-
-GuardRail is free and always will be. For teams that need the full governance stack (GuardRail Pro + Compliance Shield + priority support), see [AgentStack Pro](https://github.com/FvdHMBAI/agent-stack/blob/main/BUNDLE.md) (EUR 79/dev/month).
 
 ## License
 
@@ -319,7 +385,7 @@ MIT. See [LICENSE](LICENSE).
 
 <p align="center">
   Built by <a href="https://promptandbuild.de">Prompt & Build</a>.<br>
-  Patterns extracted from production systems running 170+ guards across 13 applications.
+  Patterns extracted from a production system running 172 guards across 13 applications.
 </p>
 
 <p align="center">
