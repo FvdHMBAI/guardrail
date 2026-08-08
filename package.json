@@ -1,6 +1,6 @@
 {
   "name": "guardrail-agent",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Pre-execution security for AI coding agents. 18 guards that block dangerous commands before they run.",
   "bin": {
     "guardrail": "./bin/guardrail.sh"
