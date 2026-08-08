@@ -292,9 +292,9 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## Battle-Tested
 
-GuardRail patterns are extracted from a production system running **170+ guards across 15 applications since 2025**. The public guards are the universal subset — they work for any codebase, any team, any agent.
+GuardRail patterns are extracted from a production system running **170+ guards across 13 applications since 2025**. The public guards are the universal subset — they work for any codebase, any team, any agent.
 
-The internal system blocks an average of **600+ dangerous commands per week**. Every guard in this repository has prevented a real incident.
+Every guard in this repository has prevented a real incident.
 
 ## Works With
 
@@ -319,7 +319,7 @@ MIT. See [LICENSE](LICENSE).
 
 <p align="center">
   Built by <a href="https://promptandbuild.de">Prompt & Build</a>.<br>
-  Patterns extracted from production systems running 170+ guards across 15 applications.
+  Patterns extracted from production systems running 170+ guards across 13 applications.
 </p>
 
 <p align="center">
