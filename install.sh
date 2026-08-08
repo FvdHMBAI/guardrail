@@ -49,8 +49,8 @@ mkdir -p "$STAGE_DIR/guards/custom"
 mkdir -p "$STAGE_DIR/dispatchers"
 mkdir -p "$STAGE_DIR/lib"
 
-# Copy ONLY the 10 Core guards (not Premium guards that may exist locally)
-CORE_GUARDS="main_push_guard basic_pii_gate basic_secret_detector destructive_path_guard firewall_flush_guard service_protection_guard mass_update_guard env_dump_detector basic_injection_scanner error_swallow_guard"
+# Copy ONLY the 11 Core guards (not Premium guards that may exist locally)
+CORE_GUARDS="main_push_guard basic_pii_gate basic_secret_detector destructive_path_guard firewall_flush_guard service_protection_guard self_bypass_guard mass_update_guard env_dump_detector basic_injection_scanner error_swallow_guard"
 for guard in $CORE_GUARDS; do
   if [ ! -f "$SCRIPT_DIR/guards/core/${guard}.sh" ]; then
     echo "  ${R}ERROR${Z} Required core guard is missing: ${guard}.sh"
@@ -70,12 +70,12 @@ chmod +x "$STAGE_DIR/dispatchers/"*.sh
 chmod +x "$STAGE_DIR/guards/core/"*.sh 2>/dev/null || true
 
 GUARD_COUNT=$(find "$STAGE_DIR/guards/core" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
-if [ "$GUARD_COUNT" -ne 10 ]; then
-  echo "  ${R}ERROR${Z} Expected exactly 10 core guards, found $GUARD_COUNT."
+if [ "$GUARD_COUNT" -ne 11 ]; then
+  echo "  ${R}ERROR${Z} Expected exactly 11 core guards, found $GUARD_COUNT."
   exit 1
 fi
 
-echo "  ${G}+${Z} Installed ${B}$GUARD_COUNT${Z} core guards"
+echo "  ${G}+${Z} Installed ${B}${GUARD_COUNT}${Z} core guards"
 
 # Generate disable secret (prevents agent token forgery)
 DISABLE_KEY_DIR="$HOME/.guardrail"
