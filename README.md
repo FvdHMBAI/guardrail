@@ -1,10 +1,6 @@
-<h1 align="center">
-  <br>
-  <img src="https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F-GuardRail-blue?style=for-the-badge&labelColor=0d1117&color=3b82f6" alt="GuardRail" height="40">
-  <br>
-  Pre-execution security for AI coding agents
-  <br>
-</h1>
+<p align="center">
+  <img src=".github/assets/banner.svg" alt="GuardRail - Pre-execution security for AI coding agents" width="100%">
+</p>
 
 <p align="center">
   <a href="https://github.com/FvdHMBAI/guardrail/actions"><img src="https://github.com/FvdHMBAI/guardrail/actions/workflows/ci.yml/badge.svg" alt="CI"></a>&nbsp;
