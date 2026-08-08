@@ -307,6 +307,10 @@ Adapters planned for: Codex CLI, Gemini CLI, Aider, Continue.dev
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Browse [good first issues](https://github.com/FvdHMBAI/guardrail/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
+## Part of AgentStack
+
+GuardRail is free and always will be. For teams that need the full governance stack (GuardRail Pro + Compliance Shield + priority support), see [AgentStack Pro](https://github.com/FvdHMBAI/agent-stack/blob/main/BUNDLE.md) (EUR 79/dev/month).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
