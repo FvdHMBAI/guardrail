@@ -304,8 +304,8 @@ Plus: Penetration test framework (50+ attack patterns), priority support, compli
 
 | Plan | Price | |
 |---|---|---|
-| **Pro** | EUR 29/dev/month | [Subscribe](https://buy.stripe.com/test_price_1Tztg5LXEy4Z7yYNmUUkNGvp) |
-| **Enterprise** | EUR 49/dev/month | [Subscribe](https://buy.stripe.com/test_price_1TztgfLXEy4Z7yYN05FqVuju) |
+| **Pro** | EUR 29/dev/month | [Subscribe](https://buy.stripe.com/7sYbJ2ai3aVs5YKgg2es005) |
+| **Enterprise** | EUR 49/dev/month | [Subscribe](https://buy.stripe.com/00wcN6gGraVscn83tges003) |
 
 ---
 
