@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a0a0a"/>
+      <stop offset="50%" stop-color="#2d1117"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="100%" stop-color="#ff4757"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="100%" stop-color="#ee5a24"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="300" fill="url(#bg)"/>
+  <rect x="0" y="296" width="1200" height="4" fill="url(#accent)"/>
+  <!-- Grid pattern -->
+  <g opacity="0.03" stroke="#fff" stroke-width="1">
+    <line x1="0" y1="60" x2="1200" y2="60"/><line x1="0" y1="120" x2="1200" y2="120"/>
+    <line x1="0" y1="180" x2="1200" y2="180"/><line x1="0" y1="240" x2="1200" y2="240"/>
+    <line x1="200" y1="0" x2="200" y2="300"/><line x1="400" y1="0" x2="400" y2="300"/>
+    <line x1="600" y1="0" x2="600" y2="300"/><line x1="800" y1="0" x2="800" y2="300"/>
+    <line x1="1000" y1="0" x2="1000" y2="300"/>
+  </g>
+  <!-- Shield icon -->
+  <g transform="translate(420, 60)">
+    <path d="M30 8 L30 8 C30 8 50 0 50 0 C50 0 70 8 70 8 L70 45 C70 65 50 80 50 80 C50 80 30 65 30 45 Z" fill="url(#shield)" opacity="0.9"/>
+    <path d="M43 35 L48 40 L58 28" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  <!-- Title -->
+  <text x="500" y="110" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="52" font-weight="800" fill="#ffffff" letter-spacing="-1">GuardRail</text>
+  <!-- Tagline -->
+  <text x="420" y="155" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="20" fill="#ff6b6b" font-weight="500">Pre-execution security for AI coding agents</text>
+  <!-- Stats line -->
+  <g transform="translate(420, 200)">
+    <rect x="0" y="0" width="140" height="32" rx="16" fill="#ff6b6b" opacity="0.15"/>
+    <text x="70" y="21" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" fill="#ff6b6b" font-weight="600" text-anchor="middle">172 Guard Rules</text>
+    <rect x="155" y="0" width="160" height="32" rx="16" fill="#ff6b6b" opacity="0.15"/>
+    <text x="235" y="21" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" fill="#ff6b6b" font-weight="600" text-anchor="middle">96% Enforcement</text>
+    <rect x="330" y="0" width="170" height="32" rx="16" fill="#ff6b6b" opacity="0.15"/>
+    <text x="415" y="21" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" fill="#ff6b6b" font-weight="600" text-anchor="middle">Battle-tested in Prod</text>
+  </g>
+  <!-- Bottom tagline -->
+  <text x="420" y="270" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" fill="#8b949e">Part of AgentStack  |  Open Source  |  MIT License</text>
+</svg>

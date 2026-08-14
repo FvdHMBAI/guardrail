@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-VERSION="0.2.6"
+VERSION="0.3.1"
 REAL_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")/.." && pwd)"
 
@@ -24,6 +24,9 @@ Usage: guardrail <command> [options]
 
 Commands:
   init                Install GuardRail into Claude Code
+  uninstall           Remove GuardRail completely (clean removal)
+  disable             Temporarily disable all guards
+  enable              Re-enable guards after disable
   test                Run regression tests
   pentest             Run security PEN-test against all guards
   status              Show active guards and recent activity
@@ -38,18 +41,190 @@ Options:
   -v, --version Show version
 
 Examples:
-  npx guardrail-agent init    Install guards
-  guardrail test                          Run all tests
+  npx guardrail-agent init              Install guards
   guardrail status                        Check guard status
+  guardrail disable                       Temporarily disable (30 min, interactive only)
+  guardrail enable                        Re-enable after disable
+  guardrail uninstall                     Clean removal (--yes to skip prompt, --purge for logs)
+  guardrail test                          Run all tests
+  guardrail pentest                       Run attack simulation
   guardrail audit --days 30               Audit report for last 30 days
   guardrail compliance-report             EU AI Act compliance report (Pro)
-  guardrail compliance-report --format md --output report.md
 
 EOF
 }
 
 cmd_init() {
   bash "$SCRIPT_DIR/install.sh" "$@"
+}
+
+cmd_uninstall() {
+  local CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
+  local INSTALL_DIR="$CLAUDE_DIR/hooks/guardrail"
+  local SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+  local AUDIT_DIR="$HOME/.guardrail"
+
+  echo ""
+  echo "  ${B}GuardRail Uninstall${Z}"
+  echo ""
+
+  if [ ! -d "$INSTALL_DIR" ]; then
+    echo "  GuardRail is not installed."
+    exit 0
+  fi
+
+  # Require interactive terminal (prevents agent self-uninstall)
+  if [ ! -t 0 ]; then
+    echo "  ${R}BLOCKED:${Z} guardrail uninstall requires an interactive terminal."
+    echo "  An AI agent cannot uninstall its own guards."
+    local AUDIT_LOG="${GUARDRAIL_AUDIT_LOG:-$HOME/.guardrail/audit.log}"
+    mkdir -p "$(dirname "$AUDIT_LOG")"
+    echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | self_bypass_attempt | guardrail uninstall from non-interactive shell | blocked" >> "$AUDIT_LOG"
+    exit 1
+  fi
+
+  local guard_count
+  guard_count=$(find "$INSTALL_DIR/guards" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
+  echo "  Found $guard_count guards in $INSTALL_DIR"
+
+  local skip_confirm=0
+  for arg in "$@"; do [ "$arg" = "--yes" ] && skip_confirm=1; done
+  if [ "$skip_confirm" -eq 0 ]; then
+    echo ""
+    echo "  This will:"
+    echo "    - Remove all guards from $INSTALL_DIR"
+    echo "    - Remove GuardRail hooks from settings.json"
+    echo "    - Keep audit logs in $AUDIT_DIR (use --purge to remove)"
+    echo ""
+    read -p "  Proceed? [y/N] " confirm
+    [[ "$confirm" =~ ^[yY]$ ]] || { echo "  Cancelled."; exit 0; }
+  fi
+
+  # Remove hook entries from settings.json
+  local settings_cleaned=0
+  if [ -f "$SETTINGS_FILE" ] && command -v jq &>/dev/null; then
+    local BACKUP="${SETTINGS_FILE}.pre-uninstall.bak"
+    cp "$SETTINGS_FILE" "$BACKUP"
+    local TMPOUT
+    TMPOUT=$(mktemp)
+    if jq 'if .hooks then .hooks |= with_entries(
+      .value |= (if type == "array" then map(
+        if .hooks and (.hooks | type == "array") then
+          .hooks |= map(select(.command | tostring | contains("guardrail") | not))
+        elif .command and (.command | tostring | contains("guardrail")) then empty
+        else . end
+      ) | map(select(if .hooks then (.hooks | length > 0) else true end)) else . end)
+    ) | if .hooks | to_entries | all(.value | length == 0) then del(.hooks) else . end else . end' \
+      "$BACKUP" > "$TMPOUT" 2>/dev/null && jq empty "$TMPOUT" 2>/dev/null; then
+      mv "$TMPOUT" "$SETTINGS_FILE"
+      echo "  ${G}+${Z} Hooks removed from settings.json"
+      settings_cleaned=1
+    else
+      rm -f "$TMPOUT"
+      cp "$BACKUP" "$SETTINGS_FILE"
+      echo "  ${Y}!${Z} Could not clean settings.json automatically."
+      echo "    Backup: $BACKUP"
+      echo "    Remove guardrail hook entries manually."
+    fi
+  elif [ -f "$SETTINGS_FILE" ]; then
+    echo "  ${R}ERROR:${Z} jq is required to safely remove hook entries from settings.json."
+    echo "  Install jq first, then retry: sudo apt install jq"
+    exit 1
+  fi
+
+  # Remove installed files (only after settings are cleaned)
+  rm -rf "$INSTALL_DIR"
+  echo "  ${G}+${Z} Guards removed from $INSTALL_DIR"
+  if [ "$settings_cleaned" -eq 0 ] && [ -f "$SETTINGS_FILE" ]; then
+    echo "  ${Y}!${Z} Settings still reference guardrail hooks (removed files)."
+    echo "    Run: jq 'del(.hooks)' ~/.claude/settings.json > /tmp/s.json && mv /tmp/s.json ~/.claude/settings.json"
+  fi
+
+  # Purge audit logs if any --purge or --yes flag is present
+  local do_purge=0
+  for arg in "$@"; do [ "$arg" = "--purge" ] && do_purge=1; done
+  if [ "$do_purge" -eq 1 ]; then
+    rm -rf "$AUDIT_DIR"
+    echo "  ${G}+${Z} Audit logs purged from $AUDIT_DIR"
+  else
+    echo "  ${D}Audit logs kept in $AUDIT_DIR${Z}"
+  fi
+
+  echo ""
+  echo "  ${G}GuardRail uninstalled.${Z}"
+  echo "  To reinstall: npx guardrail-agent init"
+  echo ""
+}
+
+cmd_disable() {
+  local CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
+  local INSTALL_DIR="$CLAUDE_DIR/hooks/guardrail"
+  local DISABLE_FLAG="$INSTALL_DIR/.disabled"
+  local AUDIT_LOG="${GUARDRAIL_AUDIT_LOG:-$HOME/.guardrail/audit.log}"
+
+  if [ ! -d "$INSTALL_DIR" ]; then
+    echo "  GuardRail is not installed. Run: npx guardrail-agent init"
+    exit 1
+  fi
+
+  # Require interactive confirmation (prevents agent self-bypass)
+  if [ ! -t 0 ]; then
+    echo "  ${R}BLOCKED:${Z} guardrail disable requires an interactive terminal."
+    echo "  An AI agent cannot disable its own guards."
+    mkdir -p "$(dirname "$AUDIT_LOG")"
+    echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | self_bypass_attempt | guardrail disable from non-interactive shell | blocked" >> "$AUDIT_LOG"
+    exit 1
+  fi
+
+  echo ""
+  echo "  ${Y}WARNING:${Z} This disables ALL guards. Your agent will be unguarded."
+  read -p "  Type 'disable' to confirm: " confirm
+  if [ "$confirm" != "disable" ]; then
+    echo "  Cancelled."
+    exit 0
+  fi
+
+  # HMAC token with install-time secret (agent cannot forge)
+  local KEY_FILE="$HOME/.guardrail/disable.key"
+  if [ ! -f "$KEY_FILE" ]; then
+    echo "  ${R}ERROR:${Z} Disable secret not found. Run: npx guardrail-agent init"
+    exit 1
+  fi
+  local ts
+  ts=$(date +%s)
+  local token
+  token=$(printf '%s' "$ts" | openssl dgst -sha256 -hmac "$(cat "$KEY_FILE")" 2>/dev/null | awk '{print $NF}' | cut -c1-32)
+  echo "$ts $token" > "$DISABLE_FLAG"
+  chmod 600 "$DISABLE_FLAG"
+  echo ""
+  echo "  ${Y}GuardRail disabled for 30 minutes.${Z}"
+  echo "  Re-enable with: guardrail enable"
+  echo "  Auto-expires at: $(date -d '+30 minutes' '+%H:%M' 2>/dev/null || date -v+30M '+%H:%M' 2>/dev/null || echo '30 min from now')"
+  echo ""
+  mkdir -p "$(dirname "$AUDIT_LOG")"
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | guardrail_disabled | manual disable by operator | 30min timeout" >> "$AUDIT_LOG"
+}
+
+cmd_enable() {
+  local CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
+  local INSTALL_DIR="$CLAUDE_DIR/hooks/guardrail"
+  local DISABLE_FLAG="$INSTALL_DIR/.disabled"
+
+  if [ ! -d "$INSTALL_DIR" ]; then
+    echo "  GuardRail is not installed. Run: npx guardrail-agent init"
+    exit 1
+  fi
+
+  if [ -f "$DISABLE_FLAG" ]; then
+    rm -f "$DISABLE_FLAG"
+    echo ""
+    echo "  ${G}GuardRail re-enabled.${Z} All guards are active."
+    echo ""
+  else
+    echo ""
+    echo "  GuardRail is already enabled."
+    echo ""
+  fi
 }
 
 cmd_test() {
@@ -70,6 +245,19 @@ cmd_status() {
   echo ""
   echo "  ${B}GuardRail${Z} ${D}v$VERSION${Z}"
   echo ""
+
+  if [ -f "$INSTALL_DIR/.disabled" ]; then
+    local _dis_ts _dis_now _dis_remain
+    _dis_ts=$(awk '{print $1}' "$INSTALL_DIR/.disabled" 2>/dev/null)
+    _dis_now=$(date +%s)
+    if [[ "$_dis_ts" =~ ^[0-9]+$ ]] && [ $((_dis_now - _dis_ts)) -lt 1800 ]; then
+      _dis_remain=$(( 1800 - (_dis_now - _dis_ts) ))
+      echo "  ${Y}DISABLED${Z} ${D}($((  _dis_remain / 60 )) min remaining, or: guardrail enable)${Z}"
+    else
+      echo "  ${Y}DISABLED${Z} ${D}(expired, will clear on next command)${Z}"
+    fi
+    echo ""
+  fi
 
   if [ -d "$INSTALL_DIR/guards/core" ]; then
     local core_count
@@ -787,8 +975,11 @@ cmd_version() {
 
 # Main dispatch
 case "${1:-}" in
-  init)     shift; cmd_init "$@" ;;
-  test)     shift; cmd_test "$@" ;;
+  init)      shift; cmd_init "$@" ;;
+  uninstall) shift; cmd_uninstall "$@" ;;
+  disable)   shift; cmd_disable "$@" ;;
+  enable)    shift; cmd_enable "$@" ;;
+  test)      shift; cmd_test "$@" ;;
   pentest)  shift; cmd_pentest "$@" ;;
   status)   shift; cmd_status "$@" ;;
   audit)    shift; cmd_audit "$@" ;;
