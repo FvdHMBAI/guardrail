@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-VERSION="0.3.2"
+VERSION="0.3.3"
 REAL_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")/.." && pwd)"
 
@@ -236,6 +236,16 @@ cmd_test() {
   fi
 }
 
+_guardrail_trial_days_left() {
+  local install_dir="$1"
+  local trial_file="$install_dir/.trial-started"
+  [ -f "$trial_file" ] || { echo "-1"; return; }
+  local ts
+  ts=$(tr -d '[:space:]' < "$trial_file" 2>/dev/null)
+  [[ "$ts" =~ ^[0-9]+$ ]] || { echo "-1"; return; }
+  echo $(( 14 - ( ($(date +%s) - ts) / 86400 ) ))
+}
+
 cmd_status() {
   local CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
   local INSTALL_DIR="$CLAUDE_DIR/hooks/guardrail"
@@ -284,9 +294,8 @@ cmd_status() {
     if [ "$pro_count" -gt 0 ]; then
       local trial_file="$INSTALL_DIR/.trial-started"
       if [ -f "$trial_file" ]; then
-        local trial_start trial_days_left
-        trial_start=$(cat "$trial_file" 2>/dev/null | tr -d '[:space:]')
-        trial_days_left=$(( 14 - ( ($(date +%s) - trial_start) / 86400 ) ))
+        local trial_days_left
+        trial_days_left=$(_guardrail_trial_days_left "$INSTALL_DIR")
         if [ "$trial_days_left" -gt 0 ]; then
           echo "  ${G}$pro_count${Z} pro guards active ${Y}(trial: $trial_days_left days left)${Z}"
         else
@@ -730,9 +739,9 @@ EOF
   tmp_tar=$(mktemp /tmp/guardrail-pro-XXXXXX.tar.gz)
 
   local http_code
-  http_code=$(curl -sf -o "$tmp_tar" -w '%{http_code}' \
+  http_code=$(curl -sf --connect-timeout 10 --max-time 30 -o "$tmp_tar" -w '%{http_code}' \
     "$api_url/api/guards/download" \
-    -H "Authorization: Bearer $license_key")
+    -H "Authorization: Bearer $license_key" 2>/dev/null || echo "000")
 
   if [ "$http_code" != "200" ] || [ ! -s "$tmp_tar" ]; then
     rm -f "$tmp_tar"
@@ -746,6 +755,12 @@ EOF
   echo "Installing Pro guards..."
 
   mkdir -p "$PRO_DIR"
+
+  if tar -tzf "$tmp_tar" 2>/dev/null | grep -qE '(^/|\.\.)'; then
+    rm -f "$tmp_tar"
+    echo "  ERROR: Archive contains unsafe paths. Aborting."
+    exit 1
+  fi
 
   if ! tar -xzf "$tmp_tar" -C "$PRO_DIR" 2>/dev/null; then
     rm -f "$tmp_tar"
@@ -792,9 +807,8 @@ _cmd_upgrade_trial() {
   fi
 
   if [ -f "$TRIAL_FILE" ]; then
-    local trial_start trial_days_left
-    trial_start=$(cat "$TRIAL_FILE" 2>/dev/null | tr -d '[:space:]')
-    trial_days_left=$(( 14 - ( ($(date +%s) - trial_start) / 86400 ) ))
+    local trial_days_left
+    trial_days_left=$(_guardrail_trial_days_left "$INSTALL_DIR")
     if [ "$trial_days_left" -le 0 ]; then
       echo ""
       echo "  Your trial has expired."
@@ -818,7 +832,7 @@ _cmd_upgrade_trial() {
   tmp_tar=$(mktemp /tmp/guardrail-trial-XXXXXX.tar.gz)
 
   local http_code
-  http_code=$(curl -sf -o "$tmp_tar" -w '%{http_code}' \
+  http_code=$(curl -sf --connect-timeout 10 --max-time 30 -o "$tmp_tar" -w '%{http_code}' \
     "$api_url/api/guards/trial" 2>/dev/null || echo "000")
 
   if [ "$http_code" != "200" ] || [ ! -s "$tmp_tar" ]; then
@@ -829,6 +843,12 @@ _cmd_upgrade_trial() {
   fi
 
   mkdir -p "$PRO_DIR"
+
+  if tar -tzf "$tmp_tar" 2>/dev/null | grep -qE '(^/|\.\.)'; then
+    rm -f "$tmp_tar"
+    echo "  ERROR: Archive contains unsafe paths. Aborting."
+    exit 1
+  fi
 
   if ! tar -xzf "$tmp_tar" -C "$PRO_DIR" 2>/dev/null; then
     rm -f "$tmp_tar"
