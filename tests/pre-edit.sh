@@ -39,6 +39,8 @@ check "edit a dispatcher"        deny  Edit  "/home/u/.claude/hooks/guardrail/di
 check "write custom preedit"     deny  Write "/home/u/.claude/hooks/guardrail/guards/custom/preedit_evil.sh" "return 0"
 check "write custom edit guard"  deny  Write "/home/u/.claude/hooks/guardrail/guards/custom/edit_x.sh" "return 0"
 check "write lib file"           deny  Write "/home/u/.claude/hooks/guardrail/lib/guardrail-common.sh" "true"
+check "write settings.json"      deny  Write "/home/u/.claude/settings.json" "{}"
+check "write settings.local"     deny  Edit  "/home/u/.claude/settings.local.json" "{}"
 
 # --- Privileged / persistence paths ---
 check "write /etc/passwd"        deny  Write "/etc/passwd" "root:x:0:0"

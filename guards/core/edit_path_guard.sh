@@ -26,6 +26,16 @@ hook_edit_path_guard() {
     return 0
   fi
 
+  # 1b. The hook registry itself. .claude/settings(.local).json is where the
+  #     PreToolUse hooks are wired in (install.sh). Rewriting it removes every
+  #     guard at once, including this one, without touching any 'guardrail'
+  #     path. This is the highest-value bypass and must be blocked.
+  if printf '%s' "$fp" | grep -qE '(^|/)\.claude/settings(\.local)?\.json$'; then
+    guardrail_audit "edit_path_guard" "file-tool write to Claude hook registry" "$fp" "blocked"
+    deny "Self-bypass blocked: AI agents must not modify .claude/settings.json through file tools. That file registers the guard hooks; rewriting it would disable all enforcement. A human operator must change hook configuration from an interactive terminal."
+    return 0
+  fi
+
   # 2. Persistence / privilege paths: writing these via a file tool is how an
   #    agent would install a backdoor that outlives the session.
   if printf '%s' "$fp" | grep -qE '(^|/)(etc/(passwd|shadow|sudoers|sudoers\.d/|cron\.d/|crontab)|\.ssh/authorized_keys|\.ssh/id_[a-z0-9]+$)'; then
