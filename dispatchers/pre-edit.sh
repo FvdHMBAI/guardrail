@@ -41,13 +41,15 @@ fi
 FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // .tool_input.notebook_path')
 SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // "default"')
 # Content across Write (content), Edit (new_string), MultiEdit (edits[].new_string)
-# and NotebookEdit (new_source).
+# and NotebookEdit (new_source). Coerce non-string values to their JSON form so
+# a secret hidden inside a non-string payload is still scanned instead of
+# silently dropped (fail-closed: if jq itself errors, block).
 CONTENT=$(printf '%s' "$INPUT" | jq -r '
-  (.tool_input.content // "")
-  + "\n" + (.tool_input.new_string // "")
-  + "\n" + (.tool_input.new_source // "")
-  + "\n" + ((.tool_input.edits // []) | map(.new_string // "") | join("\n"))
-' 2>/dev/null)
+  [ .tool_input.content, .tool_input.new_string, .tool_input.new_source,
+    (.tool_input.edits // [] | .[]?.new_string) ]
+  | map(select(. != null) | if type == "string" then . else tojson end)
+  | join("\n")
+' 2>/dev/null) || deny "GUARDRAIL INPUT ERROR: content could not be extracted for inspection. Blocked to fail closed."
 
 # Respect the same HMAC-gated disable flag as pre-bash.
 if [ -f "$SCRIPT_DIR/../.disabled" ]; then
