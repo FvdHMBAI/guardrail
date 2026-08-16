@@ -18,7 +18,7 @@ hook_self_correction_loop() {
   printf '%s' "$head_out" | grep -qiE '(0 errors|no errors|succeeded|success|passed|PASS)' && return 0
 
   # Build errors
-  if printf '%s' "$head_out" | grep -qiE '(build failed|compilation error|tsc.*error|next build.*error|webpack.*error)'; then
+  if printf '%s' "$head_out" | grep -qiE '(build failed|compilation error|tsc.*error|error TS[0-9]{3,}|next build.*error|webpack.*error)'; then
     add_context "BUILD ERROR detected. Self-correction required: read the error, open the file, apply the fix, rebuild. Do not continue without a green build."
     guardrail_audit "self_correction_loop" "build error" "$CMD" "correction-required"
     return 0
