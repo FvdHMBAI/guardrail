@@ -86,6 +86,16 @@ nb_check "notebook secret"       deny  "/repo/n.ipynb" "k='${AWS_TRIG}'"
 nb_check "notebook settings"     deny  "/home/u/.claude/settings.json" "{}"
 nb_check "notebook normal"       allow "/repo/ok.ipynb" "x = 1"
 
+# --- Non-string content must still be scanned (coerced, not dropped) ---
+nsc=$(jq -n --arg k "$AWS_TRIG" \
+  '{"session_id":"t","tool_name":"Write","tool_input":{"file_path":"/repo/x.js","content":{"key":$k}}}' |
+  GUARDRAIL_LOG_DIR="$TMP_ROOT/logs" GUARDRAIL_AUDIT_LOG="$TMP_ROOT/audit.log" bash "$DISPATCHER")
+if [ "$(printf '%s' "$nsc" | jq -r '.hookSpecificOutput.permissionDecision')" = "deny" ]; then
+  PASS=$((PASS + 1))
+else
+  FAIL=$((FAIL + 1)); FAILURES+=("non-string content secret expected=deny")
+fi
+
 echo "pre-edit: $PASS passed, $FAIL failed"
 if [ "$FAIL" -gt 0 ]; then
   printf '  FAIL: %s\n' "${FAILURES[@]}"
