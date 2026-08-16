@@ -67,12 +67,19 @@ _guardrail_load_guard() {
   [ -f "$GUARDS_DIR/$g" ] || deny "GUARDRAIL INTEGRITY ERROR: required guard $g is missing."
   source "$GUARDS_DIR/$g" || deny "GUARDRAIL INTEGRITY ERROR: guard $g could not be loaded."
 }
-_guardrail_run() { local fn="$1"; declare -F "$fn" >/dev/null && "$fn"; }
+# Fail-closed: a required core guard whose function is missing after sourcing
+# is an integrity failure, not a skip. Mirrors pre-bash.sh. Silently running
+# past a missing guard would fail open, exactly what this dispatcher prevents.
+_guardrail_run_required() {
+  local fn="$1"
+  declare -F "$fn" >/dev/null || deny "GUARDRAIL INTEGRITY ERROR: required guard function $fn is missing. Blocking to fail closed."
+  "$fn" || deny "GUARDRAIL RUNTIME ERROR: guard $fn failed. Blocking to fail closed."
+}
 
 _guardrail_load_guard "edit_path_guard.sh"
 _guardrail_load_guard "edit_secret_guard.sh"
-_guardrail_run hook_edit_path_guard
-_guardrail_run hook_edit_secret_guard
+_guardrail_run_required hook_edit_path_guard
+_guardrail_run_required hook_edit_secret_guard
 
 # Custom pre-edit guards: preedit_*.sh
 if [ -d "$CUSTOM_DIR" ]; then
