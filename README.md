@@ -106,9 +106,9 @@ Real incidents from our production system that GuardRail stopped:
 - Agent tried to `touch /tmp/approval-gate` to bypass its own safety checks.
 - 47 consecutive failed curl attempts (wrong port) before the wandering detector intervened.
 
-## 18 Core Guards
+## Core Guards (11 installed by default + 7 optional)
 
-All free. All MIT-licensed. All battle-tested.
+All free. All MIT-licensed. All battle-tested. `npx guardrail-agent init` installs the 11 core guards. Activate optional guards with `guardrail upgrade --trial` or Pro.
 
 ### Pre-execution guards (block before the command runs)
 

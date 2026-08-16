@@ -130,6 +130,12 @@
       white-space: nowrap;
     }
     .hero-install a:hover { opacity: 0.92; text-decoration: none; }
+    .hero-trial {
+      font-size: 0.9rem;
+      color: var(--ink-dim);
+      margin-bottom: 1rem;
+      line-height: 1.7;
+    }
     .hero-compat {
       font-size: 0.78rem;
       color: var(--ink-faint);
@@ -475,8 +481,8 @@
     /* Pricing comparison */
     .pricing-table {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
       margin-bottom: 2rem;
     }
     .price-col {
@@ -690,6 +696,7 @@
       .stats { gap: 2rem; }
       .stat-num { font-size: 2.2rem; }
       .pricing-table { grid-template-columns: 1fr; }
+      .pricing-table-desktop { grid-template-columns: 1fr; }
       .proof-bar { grid-template-columns: 1fr 1fr; }
       .comparison { font-size: 0.75rem; }
       .comparison th, .comparison td { padding: 0.65rem 0.4rem; }
@@ -724,6 +731,7 @@
     <code><span class="prompt">$</span> npx guardrail-agent init</code>
     <a href="#pro">Compare plans</a>
   </div>
+  <p class="hero-trial">No credit card needed. Try all Pro guards free for 14 days:<br><code style="font-family:var(--mono);font-size:0.88rem;background:var(--code-bg);color:var(--code-text);padding:0.25rem 0.6rem;border-radius:3px;margin-left:0.3rem;">guardrail upgrade --trial</code></p>
   <p class="hero-compat">Native Claude Code integration today &middot; Codex CLI and Gemini CLI adapters planned next &middot; The guard engine does not depend on an LLM</p>
 </header>
 
@@ -735,7 +743,7 @@
     </div>
     <div class="demo-body">
       <div class="demo-line"><span class="agent">$</span> <span class="cmd">npx guardrail-agent init</span></div>
-      <div class="demo-line"><span class="ok">+</span> <span class="reason">Installed 10 core guards</span></div>
+      <div class="demo-line"><span class="ok">+</span> <span class="reason">Installed 11 core guards</span></div>
       <div class="demo-line" style="margin-bottom:0.6em"><span class="ok">+</span> <span class="reason">Configured Claude Code hooks</span></div>
       <div class="demo-line"><span class="agent">$</span> <span class="cmd">rm -rf /home/developer</span>&ensp;<span class="blocked">x BLOCKED</span> <span class="reason">destructive path</span></div>
       <div class="demo-line"><span class="agent">$</span> <span class="cmd">git push --force origin main</span>&ensp;<span class="blocked">x BLOCKED</span> <span class="reason">protected branch</span></div>
@@ -793,7 +801,7 @@
       <div class="how-step">
         <div class="step-num">1</div>
         <h3>Install</h3>
-        <p>One command adds GuardRail to your project. It configures the hooks directory and installs 10 core security guards.</p>
+        <p>One command adds GuardRail to your project. It configures the hooks directory and installs 11 core security guards.</p>
         <code><span style="color:#64748B">$</span> npx guardrail-agent init</code>
       </div>
       <div class="how-step">
@@ -834,8 +842,8 @@
 <section id="guards" class="guards">
   <div class="wrap">
     <div class="sec-eyebrow">Free Core &middot; Available now</div>
-    <h2 class="sec-title">10 core guards included</h2>
-    <p class="sec-desc">Ten readable MIT-licensed rules for common high-impact mistakes, backed by dispatcher, installer, regression, and adversarial tests.</p>
+    <h2 class="sec-title">11 core guards included</h2>
+    <p class="sec-desc">Eleven readable MIT-licensed rules for common high-impact mistakes, backed by dispatcher, installer, regression, and adversarial tests.</p>
     <div class="guards-list">
       <div class="guard-item">
         <div class="type-tag">pre-bash</div>
@@ -883,6 +891,11 @@
         <p>Detects prompt injection attempts in command output before they reach the agent.</p>
       </div>
       <div class="guard-item">
+        <div class="type-tag">pre-bash</div>
+        <h3>self_bypass_guard</h3>
+        <p>Detects when an agent tries to modify, move, or disable its own guard files or hook configuration.</p>
+      </div>
+      <div class="guard-item">
         <div class="type-tag">post-edit</div>
         <h3>error_swallow_guard</h3>
         <p>Catches empty catch blocks in payment, webhook, and cron code during file edits.</p>
@@ -908,12 +921,12 @@
       </div>
       <div class="origin-item">
         <h3>Open Core</h3>
-        <p>The 10 core guards are MIT licensed and free. The Pro tier adds advanced guards derived from real production incidents. Both tiers run the same architecture.</p>
+        <p>The 11 core guards are MIT licensed and free. The Pro tier adds advanced guards derived from real production incidents. Both tiers run the same architecture.</p>
       </div>
     </div>
     <div class="stats">
       <div class="stat-item">
-        <div class="stat-num">10</div>
+        <div class="stat-num">11</div>
         <div class="stat-label">Open Core guards</div>
       </div>
       <div class="stat-item">
@@ -958,8 +971,8 @@
         <p>Tracks command sequences across a session. Detects coordinated reconnaissance patterns that single-command guards miss.</p>
       </div>
       <div class="pro-item">
-        <h3>Self-Bypass Prevention</h3>
-        <p>Detects when an AI agent attempts to modify, disable, or circumvent its own security guards. A real pattern we discovered in production.</p>
+        <h3>Context Window Guard</h3>
+        <p>Tracks tool call volume per session and stops runaway agents before they exhaust your token budget. Configurable limits per session and per hour.</p>
       </div>
       <div class="pro-item">
         <h3>PEN-Test Framework</h3>
@@ -974,13 +987,27 @@
         <div class="amount">Free</div>
         <div class="tier-desc">Open source, MIT licensed. Always free.</div>
         <ul>
-          <li>10 auditable core security guards</li>
+          <li>11 auditable core security guards</li>
           <li>Pre-bash, post-bash, post-edit hooks</li>
           <li>Custom guard directory for your own rules</li>
           <li>Audit log for all blocked commands</li>
           <li>Public source code, documentation, and issue tracker</li>
         </ul>
         <a href="https://github.com/FvdHMBAI/guardrail#readme" class="btn-outline">View Core and docs</a>
+      </div>
+      <div class="price-col">
+        <div class="bundle-note">One-time purchase</div>
+        <div class="tier-name">AI Governance Starter Kit</div>
+        <div class="amount">&euro;69</div>
+        <div class="tier-desc">Everything you need to govern AI agents in your team. Buy once, keep forever.</div>
+        <ul>
+          <li>20 production-tested guards</li>
+          <li>3 dispatcher configurations</li>
+          <li>4 skill runbooks for common workflows</li>
+          <li>Ready-to-use CLAUDE.md template</li>
+          <li>Setup guide with architecture walkthrough</li>
+        </ul>
+        <a href="https://buy.stripe.com/fZu8wQ9dZ8Nk86S4xkes006" class="btn-accent">Buy Starter Kit</a>
       </div>
       <div class="price-col featured">
         <div class="tier-name">Pro</div>
@@ -996,6 +1023,7 @@
           <li>Priority email support</li>
         </ul>
         <a href="https://buy.stripe.com/7sYbJ2ai3aVs5YKgg2es005" class="btn-accent" id="checkout-pro">Subscribe to Pro</a>
+        <p style="margin-top:0.6rem;font-size:0.78rem;color:var(--dark-dim);">Or try free for 14 days: <code style="font-family:var(--mono);font-size:0.75rem;">guardrail upgrade --trial</code></p>
       </div>
       <div class="price-col">
         <div class="bundle-note">Coordinated early access</div>
@@ -1095,7 +1123,7 @@
 <section class="cta-section">
   <div class="wrap">
     <h2 class="sec-title">Give your agent power without leaving it unchecked.</h2>
-    <p class="sec-desc">Start with the free Core, upgrade for advanced protection, or combine action security with European personal-data detection.</p>
+    <p class="sec-desc">Start with the free Core, try Pro for 14 days without a credit card, or buy the Starter Kit for a one-time setup.</p>
     <div class="cta-install">
       <code><span class="prompt">$</span> npx guardrail-agent init</code>
       <a href="#pro">Choose a plan</a>
