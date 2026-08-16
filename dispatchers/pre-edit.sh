@@ -23,6 +23,10 @@ deny() {
   exit 0
 }
 
+# Load audit early so even a malformed-payload deny is logged (malformed-input
+# probing must be visible in the audit trail, not just blocked silently).
+[ -f "$LIB_DIR/guardrail-common.sh" ] && source "$LIB_DIR/guardrail-common.sh" 2>/dev/null
+
 # Validate payload shape; block on anything we cannot inspect.
 # file_path for Write/Edit/MultiEdit, notebook_path for NotebookEdit.
 if ! printf '%s' "$INPUT" | jq -e '
