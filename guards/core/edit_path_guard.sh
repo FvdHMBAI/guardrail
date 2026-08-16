@@ -26,6 +26,19 @@ hook_edit_path_guard() {
     return 0
   fi
 
+  # 1a. A custom-guards dir configured via env var. The dispatcher auto-sources
+  #     preedit_*.sh from $GUARDRAIL_CUSTOM_GUARDS_DIR, so a write there is the
+  #     same bypass as guards/custom/ but at an operator-configured path.
+  if [ -n "${GUARDRAIL_CUSTOM_GUARDS_DIR:-}" ]; then
+    case "$fp" in
+      "${GUARDRAIL_CUSTOM_GUARDS_DIR%/}"/*)
+        guardrail_audit "edit_path_guard" "file-tool write to configured custom-guards dir" "$fp" "blocked"
+        deny "Self-bypass blocked: AI agents must not write into the configured custom-guards directory (GUARDRAIL_CUSTOM_GUARDS_DIR). Those files are auto-executed. Only a human operator may change them from an interactive terminal."
+        return 0
+        ;;
+    esac
+  fi
+
   # 1b. The hook registry itself. .claude/settings(.local).json is where the
   #     PreToolUse hooks are wired in (install.sh). Rewriting it removes every
   #     guard at once, including this one, without touching any 'guardrail'
