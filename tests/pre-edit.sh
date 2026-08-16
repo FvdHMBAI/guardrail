@@ -68,6 +68,9 @@ check "private key block"        deny  Write "/repo/id" "$PK_TRIG"
 check "normal source file"       allow Write "/repo/src/index.js" "export const x = 1"
 check "normal markdown"          allow Write "/repo/README.md" "# Title"
 check "env with placeholder"     allow Write "/repo/.env.example" "STRIPE=${STRIPE_PLACEHOLDER}"
+check "dotslash settings"        deny  Write "/home/u/.claude/./settings.json" "{}"
+check "doubleslash settings"     deny  Write "/home/u/.claude//settings.json" "{}"
+check "dotdot into guardrail"    deny  Write "/home/u/.claude/hooks/guardrail/../guardrail/guards/core/x.sh" "x"
 check "config no secrets"        allow Edit  "/repo/config.json" '{"port": 3000}'
 
 # --- NotebookEdit (notebook_path + new_source) ---
