@@ -38,7 +38,7 @@ hook_credential_leak_guard() {
   echo "$head_out" | grep -qE '(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{30,}' && detected="$detected github-token"
 
   # Anthropic keys
-  echo "$head_out" | grep -qE 'sk-ant-[A-Za-z0-9]{20,}' && detected="$detected anthropic-key"
+  echo "$head_out" | grep -qE 'sk-ant-[A-Za-z0-9_-]{20,}' && detected="$detected anthropic-key"
 
   # OpenAI keys
   echo "$head_out" | grep -qE 'sk-[A-Za-z0-9]{40,}' && detected="$detected openai-key"
