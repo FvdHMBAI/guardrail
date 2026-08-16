@@ -14,10 +14,15 @@ hook_edit_path_guard() {
   local fp="$FILE_PATH"
   [ -z "$fp" ] && return 0
 
-  # 1. Self-bypass: writing GuardRail's own disable mechanism via a file tool.
-  if printf '%s' "$fp" | grep -qE 'guardrail/\.disabled$|/\.guardrail/disable\.key$|guardrail/dispatchers/|guardrail/guards/(core|pro)/'; then
+  # 1. Self-bypass: writing anything under GuardRail's own install tree via a
+  #    file tool. Covers the disable mechanism AND every directory the
+  #    dispatchers auto-source: guards/core, guards/pro, guards/custom (incl.
+  #    preedit_*.sh / edit_*.sh), dispatchers/, and lib/. Writing a new
+  #    custom guard would otherwise be auto-sourced and executed on the next
+  #    tool call, bypassing the whole system.
+  if printf '%s' "$fp" | grep -qE 'guardrail/\.disabled$|/\.guardrail/disable\.key$|guardrail/(dispatchers|lib)/|guardrail/guards/(core|pro|custom)/'; then
     guardrail_audit "edit_path_guard" "file-tool write to guardrail control path" "$fp" "blocked"
-    deny "Self-bypass blocked: AI agents must not modify GuardRail's own guards, dispatchers, or disable mechanism through file tools. Only a human operator may change these from an interactive terminal."
+    deny "Self-bypass blocked: AI agents must not create or modify GuardRail's own guards, dispatchers, or disable mechanism through file tools. This includes custom guards, which are auto-executed. Only a human operator may change these from an interactive terminal."
     return 0
   fi
 

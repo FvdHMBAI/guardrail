@@ -36,6 +36,9 @@ check "write .disabled"          deny  Write "/home/u/.claude/hooks/guardrail/.d
 check "write disable.key"        deny  Write "/home/u/.guardrail/disable.key" "secret"
 check "edit a core guard"        deny  Edit  "/home/u/.claude/hooks/guardrail/guards/core/self_bypass_guard.sh" "return 0"
 check "edit a dispatcher"        deny  Edit  "/home/u/.claude/hooks/guardrail/dispatchers/pre-bash.sh" "exit 0"
+check "write custom preedit"     deny  Write "/home/u/.claude/hooks/guardrail/guards/custom/preedit_evil.sh" "return 0"
+check "write custom edit guard"  deny  Write "/home/u/.claude/hooks/guardrail/guards/custom/edit_x.sh" "return 0"
+check "write lib file"           deny  Write "/home/u/.claude/hooks/guardrail/lib/guardrail-common.sh" "true"
 
 # --- Privileged / persistence paths ---
 check "write /etc/passwd"        deny  Write "/etc/passwd" "root:x:0:0"
