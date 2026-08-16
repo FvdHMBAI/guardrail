@@ -1,6 +1,6 @@
 {
   "name": "guardrail-agent",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Pre-execution security for AI coding agents. 18 guards that block dangerous commands before they run.",
   "bin": {
     "guardrail": "./bin/guardrail.sh"
@@ -8,7 +8,7 @@
   "scripts": {
     "typecheck": "bash -n bin/guardrail.sh install.sh dispatchers/*.sh lib/*.sh guards/core/*.sh",
     "test": "./tests/regression.sh && ./tests/adversarial.sh && ./tests/installer-adversarial.sh",
-    "postinstall": "echo '\\n  Run: npx guardrail-agent init\\n'"
+    "postinstall": "echo '\\n  Run: npx guardrail-agent init\\n  Book: \"Running Without Me\". The full methodology behind GuardRail.\\n  https://promptandbuild.de/book\\n'"
   },
   "keywords": [
     "ai-safety",

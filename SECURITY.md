@@ -4,7 +4,24 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.1.x   | Yes       |
+| 0.4.x   | Yes       |
+| < 0.4   | No        |
+
+## Enforcement coverage
+
+GuardRail enforces on **both** mutation surfaces the agent can use:
+
+- **Bash commands** — `PreToolUse` on `Bash` (deny-capable).
+- **File writes** — `PreToolUse` on `Write` / `Edit` / `MultiEdit` (deny-capable),
+  added in 0.4.0.
+
+Before 0.4.0, deny-capable guards ran on Bash only; file-tool writes were seen
+by a `PostToolUse` (advisory) hook after the write had already happened. An
+agent could therefore create the disable file, overwrite a privileged path, or
+write secrets to disk without a blocking guard ever inspecting it. 0.4.0 closes
+this by inspecting `file_path` and content **before** the write. General rule:
+every deny-capable guard set must cover all mutation primitives of the runtime,
+not just the shell.
 
 ## Reporting a Vulnerability
 

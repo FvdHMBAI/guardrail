@@ -139,15 +139,19 @@ fi
 
 PRE_BASH="$INSTALL_DIR/dispatchers/pre-bash.sh"
 POST_BASH="$INSTALL_DIR/dispatchers/post-bash.sh"
+PRE_EDIT="$INSTALL_DIR/dispatchers/pre-edit.sh"
 POST_EDIT="$INSTALL_DIR/dispatchers/post-edit.sh"
 
 TEMP_SETTINGS=$(mktemp)
-jq --arg pre "$PRE_BASH" --arg post "$POST_BASH" --arg edit "$POST_EDIT" '
+jq --arg pre "$PRE_BASH" --arg post "$POST_BASH" --arg preedit "$PRE_EDIT" --arg edit "$POST_EDIT" '
   .hooks //= {} |
   .hooks.PreToolUse //= [] |
   .hooks.PostToolUse //= [] |
   (if (.hooks.PreToolUse | any(.hooks[]?.command == $pre)) | not
    then .hooks.PreToolUse += [{"matcher": "Bash", "hooks": [{"type": "command", "command": $pre}]}]
+   else . end) |
+  (if (.hooks.PreToolUse | any(.hooks[]?.command == $preedit)) | not
+   then .hooks.PreToolUse += [{"matcher": "Write|Edit|MultiEdit", "hooks": [{"type": "command", "command": $preedit}]}]
    else . end) |
   (if (.hooks.PostToolUse | any(.hooks[]?.command == $post)) | not
    then .hooks.PostToolUse += [{"matcher": "Bash", "hooks": [{"type": "command", "command": $post}]}]
