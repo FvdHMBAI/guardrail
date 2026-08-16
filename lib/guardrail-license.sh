@@ -3,6 +3,16 @@
 # Checks Pro license key against the API with 24h cache.
 # License: MIT
 
+_guardrail_trial_days_left() {
+  local INSTALL_DIR="$1"
+  local TRIAL_FILE="$INSTALL_DIR/.trial-started"
+  [ -f "$TRIAL_FILE" ] || { echo "-1"; return; }
+  local ts
+  ts=$(tr -d '[:space:]' < "$TRIAL_FILE" 2>/dev/null)
+  [[ "$ts" =~ ^[0-9]+$ ]] || { echo "-1"; return; }
+  echo $(( 14 - ( ($(date +%s) - ts) / 86400 ) ))
+}
+
 _guardrail_check_pro_license() {
   local INSTALL_DIR
   INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -13,6 +23,9 @@ _guardrail_check_pro_license() {
   local GRACE_PERIOD=259200  # 72h (API unreachable grace)
 
   if [ ! -f "$KEY_FILE" ]; then
+    local trial_left
+    trial_left=$(_guardrail_trial_days_left "$INSTALL_DIR")
+    [ "$trial_left" -gt 0 ] 2>/dev/null && return 0
     return 1
   fi
 

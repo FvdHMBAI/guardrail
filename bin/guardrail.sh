@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-VERSION="0.3.1"
+VERSION="0.3.3"
 REAL_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")/.." && pwd)"
 
@@ -236,6 +236,16 @@ cmd_test() {
   fi
 }
 
+_guardrail_trial_days_left() {
+  local install_dir="$1"
+  local trial_file="$install_dir/.trial-started"
+  [ -f "$trial_file" ] || { echo "-1"; return; }
+  local ts
+  ts=$(tr -d '[:space:]' < "$trial_file" 2>/dev/null)
+  [[ "$ts" =~ ^[0-9]+$ ]] || { echo "-1"; return; }
+  echo $(( 14 - ( ($(date +%s) - ts) / 86400 ) ))
+}
+
 cmd_status() {
   local CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
   local INSTALL_DIR="$CLAUDE_DIR/hooks/guardrail"
@@ -281,9 +291,30 @@ cmd_status() {
   if [ -d "$INSTALL_DIR/guards/pro" ]; then
     local pro_count
     pro_count=$(find "$INSTALL_DIR/guards/pro" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
-    [ "$pro_count" -gt 0 ] && echo "  ${G}$pro_count${Z} pro guards active" || echo "  ${D}0${Z} pro guards"
+    if [ "$pro_count" -gt 0 ]; then
+      local trial_file="$INSTALL_DIR/.trial-started"
+      if [ -f "$trial_file" ]; then
+        local trial_days_left
+        trial_days_left=$(_guardrail_trial_days_left "$INSTALL_DIR")
+        if [ "$trial_days_left" -gt 0 ]; then
+          echo "  ${G}$pro_count${Z} pro guards active ${Y}(trial: $trial_days_left days left)${Z}"
+        else
+          echo "  ${R}$pro_count${Z} pro guards ${R}(trial expired)${Z}"
+          echo ""
+          echo "  ${B}Keep your Pro guards:${Z} guardrail upgrade --key YOUR_KEY"
+          echo "  ${D}Get a key: https://guardrail.promptandbuild.de${Z}"
+        fi
+      else
+        echo "  ${G}$pro_count${Z} pro guards active"
+      fi
+    else
+      echo "  ${D}0${Z} pro guards"
+    fi
   else
-    echo "  ${D}0${Z} pro guards ${D}(guardrail upgrade --key ...)${Z}"
+    echo "  ${D}0${Z} pro guards"
+    echo ""
+    echo "  ${B}Unlock 48 Pro guards free for 14 days:${Z}"
+    echo "  ${G}guardrail upgrade --trial${Z}"
   fi
 
   if [ -d "$INSTALL_DIR/guards/custom" ]; then
@@ -517,8 +548,17 @@ PROEOF
   fi
   echo "  ${G}${B}All $P tests passed.${Z}"
   echo ""
-  echo "  ${D}Advanced PEN-testing (50+ attack patterns): guardrail pentest --pro${Z}"
-  echo ""
+  local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
+  if [ ! -d "$INSTALL_DIR/guards/pro" ] || [ "$(find "$INSTALL_DIR/guards/pro" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')" = "0" ]; then
+    echo "  ${B}Your 20 core guards passed. But real attacks use multi-step patterns.${Z}"
+    echo "  ${D}Pro adds 48 guards from real incidents + 50 attack simulations.${Z}"
+    echo ""
+    echo "  ${G}Try free for 14 days:${Z} guardrail upgrade --trial"
+    echo ""
+  else
+    echo "  ${D}Advanced PEN-testing (50+ attack patterns): guardrail pentest --pro${Z}"
+    echo ""
+  fi
 }
 
 cmd_new() {
@@ -612,43 +652,49 @@ TESTEOF
 }
 
 cmd_upgrade() {
-  local license_key=""
+  local license_key="" trial_mode=""
   local api_url="${GUARDRAIL_API_URL:-https://license.guardrail.promptandbuild.de}"
 
   while [ $# -gt 0 ]; do
     case "$1" in
       --key) license_key="$2"; shift 2 ;;
+      --trial) trial_mode=1; shift ;;
       *) shift ;;
     esac
   done
 
+  if [ -n "$trial_mode" ]; then
+    _cmd_upgrade_trial "$api_url"
+    return
+  fi
+
   if [ -z "$license_key" ]; then
     cat << 'EOF'
-GuardRail Pro
-=============
 
-40+ advanced guards derived from real production incidents.
+  GuardRail Pro
+  =============
 
-What's included:
-  - 48+ advanced guards from real production incidents
-  - PII Shield: scans agent outputs for personal data (10 EU countries)
-  - Audit Trail: structured JSONL logging of all agent actions
-  - Compliance Reporter: EU AI Act article mapping and reports
-  - Multi-step attack detection
-  - Script content analysis and injection prevention
-  - Agent self-bypass prevention
-  - PEN-test framework (50+ attack patterns)
-  - Priority support and updates
+  48 advanced guards derived from real production incidents.
 
-Pricing:
-  EUR 29/dev/month
-  EUR 4,900 one-time compliance kit
+  What's included:
+    - 48 guards from 14 months of production AI agent operation
+    - PII Shield: scans outputs for personal data (10 EU countries)
+    - Audit Trail: structured JSONL logging of all agent actions
+    - Compliance Reporter: EU AI Act article mapping and reports
+    - Multi-step attack detection and script content analysis
+    - Agent self-bypass prevention
+    - PEN-test framework (50+ attack patterns)
+    - Priority support and updates
 
-Usage:
-  guardrail upgrade --key GR-PRO-XXXXXX-XXXXXX-XXXXXX-XXXXXX
+  Pricing:
+    EUR 29/dev/month    https://guardrail.promptandbuild.de
 
-Get your key: https://guardrail.promptandbuild.de
-Contact:      frederik@frederikvonderheyden.de
+  Start now:
+    guardrail upgrade --trial               Free 14-day trial
+    guardrail upgrade --key GR-PRO-...      Activate with license key
+
+  The book behind the system:
+    "Runs Without Me" - amazon.de/dp/B0HDMT162J
 
 EOF
     return
@@ -693,9 +739,9 @@ EOF
   tmp_tar=$(mktemp /tmp/guardrail-pro-XXXXXX.tar.gz)
 
   local http_code
-  http_code=$(curl -sf -o "$tmp_tar" -w '%{http_code}' \
+  http_code=$(curl -sf --connect-timeout 10 --max-time 30 -o "$tmp_tar" -w '%{http_code}' \
     "$api_url/api/guards/download" \
-    -H "Authorization: Bearer $license_key")
+    -H "Authorization: Bearer $license_key" 2>/dev/null || echo "000")
 
   if [ "$http_code" != "200" ] || [ ! -s "$tmp_tar" ]; then
     rm -f "$tmp_tar"
@@ -709,6 +755,12 @@ EOF
   echo "Installing Pro guards..."
 
   mkdir -p "$PRO_DIR"
+
+  if tar -tzf "$tmp_tar" 2>/dev/null | grep -qE '(^/|\.\.)'; then
+    rm -f "$tmp_tar"
+    echo "  ERROR: Archive contains unsafe paths. Aborting."
+    exit 1
+  fi
 
   if ! tar -xzf "$tmp_tar" -C "$PRO_DIR" 2>/dev/null; then
     rm -f "$tmp_tar"
@@ -734,6 +786,91 @@ EOF
   echo "  Run 'guardrail status' to verify."
   echo "  Run 'guardrail pentest' to test all guards."
   echo "================================"
+}
+
+_cmd_upgrade_trial() {
+  local api_url="$1"
+  local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
+  local PRO_DIR="$INSTALL_DIR/guards/pro"
+  local TRIAL_FILE="$INSTALL_DIR/.trial-started"
+
+  if [ ! -d "$INSTALL_DIR/guards/core" ]; then
+    echo ""
+    echo "  GuardRail is not installed. Run 'guardrail init' first."
+    exit 1
+  fi
+
+  if [ -f "$INSTALL_DIR/.license-key" ]; then
+    echo ""
+    echo "  You already have a Pro license. Run 'guardrail status' to check."
+    return
+  fi
+
+  if [ -f "$TRIAL_FILE" ]; then
+    local trial_days_left
+    trial_days_left=$(_guardrail_trial_days_left "$INSTALL_DIR")
+    if [ "$trial_days_left" -le 0 ]; then
+      echo ""
+      echo "  Your trial has expired."
+      echo ""
+      echo "  ${B}Keep your Pro guards:${Z} https://guardrail.promptandbuild.de"
+      echo "  Then: guardrail upgrade --key YOUR_KEY"
+      return
+    fi
+    echo ""
+    echo "  Trial already active ($trial_days_left days remaining)."
+    echo "  Run 'guardrail status' to see your Pro guards."
+    return
+  fi
+
+  echo ""
+  echo "  ${B}GuardRail Pro - 14-Day Free Trial${Z}"
+  echo ""
+  echo "  Downloading 48 Pro guards..."
+
+  local tmp_tar
+  tmp_tar=$(mktemp /tmp/guardrail-trial-XXXXXX.tar.gz)
+
+  local http_code
+  http_code=$(curl -sf --connect-timeout 10 --max-time 30 -o "$tmp_tar" -w '%{http_code}' \
+    "$api_url/api/guards/trial" 2>/dev/null || echo "000")
+
+  if [ "$http_code" != "200" ] || [ ! -s "$tmp_tar" ]; then
+    rm -f "$tmp_tar"
+    echo "  ERROR: Trial download failed (HTTP $http_code)."
+    echo "  Try again or contact: frederik@frederikvonderheyden.de"
+    exit 1
+  fi
+
+  mkdir -p "$PRO_DIR"
+
+  if tar -tzf "$tmp_tar" 2>/dev/null | grep -qE '(^/|\.\.)'; then
+    rm -f "$tmp_tar"
+    echo "  ERROR: Archive contains unsafe paths. Aborting."
+    exit 1
+  fi
+
+  if ! tar -xzf "$tmp_tar" -C "$PRO_DIR" 2>/dev/null; then
+    rm -f "$tmp_tar"
+    echo "  ERROR: Failed to extract trial guards."
+    exit 1
+  fi
+  rm -f "$tmp_tar"
+
+  date +%s > "$TRIAL_FILE"
+
+  local pro_count
+  pro_count=$(find "$PRO_DIR" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
+
+  echo "  ${G}$pro_count Pro guards installed.${Z}"
+  echo ""
+  echo "  Your trial runs for 14 days. After that:"
+  echo "  - Subscribe at https://guardrail.promptandbuild.de"
+  echo "  - Run: guardrail upgrade --key YOUR_KEY"
+  echo ""
+  echo "  ${D}Run 'guardrail status' to see all active guards.${Z}"
+  echo "  ${D}Run 'guardrail pentest --pro' for the full attack simulation.${Z}"
+  echo ""
 }
 
 cmd_compliance_report() {
