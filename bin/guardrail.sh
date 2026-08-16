@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-VERSION="0.3.3"
+VERSION="0.4.6"
 REAL_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")/.." && pwd)"
 
@@ -236,15 +236,13 @@ cmd_test() {
   fi
 }
 
-_guardrail_trial_days_left() {
-  local install_dir="$1"
-  local trial_file="$install_dir/.trial-started"
-  [ -f "$trial_file" ] || { echo "-1"; return; }
-  local ts
-  ts=$(tr -d '[:space:]' < "$trial_file" 2>/dev/null)
-  [[ "$ts" =~ ^[0-9]+$ ]] || { echo "-1"; return; }
-  echo $(( 14 - ( ($(date +%s) - ts) / 86400 ) ))
-}
+# Trial handling lives in lib/guardrail-license.sh so the CLI and the
+# dispatchers agree on what a valid trial stamp is. A second copy here drifted
+# out of sync once already.
+if [ ! -f "$SCRIPT_DIR/lib/guardrail-license.sh" ] || ! source "$SCRIPT_DIR/lib/guardrail-license.sh"; then
+  echo "  ERROR: lib/guardrail-license.sh is missing or unreadable. Reinstall with: npx guardrail-agent init" >&2
+  exit 1
+fi
 
 cmd_status() {
   local CLAUDE_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}"
@@ -550,7 +548,7 @@ PROEOF
   echo ""
   local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
   if [ ! -d "$INSTALL_DIR/guards/pro" ] || [ "$(find "$INSTALL_DIR/guards/pro" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')" = "0" ]; then
-    echo "  ${B}Your 20 core guards passed. But real attacks use multi-step patterns.${Z}"
+    echo "  ${B}Your 13 core guards passed. But real attacks use multi-step patterns.${Z}"
     echo "  ${D}Pro adds 48 guards from real incidents + 50 attack simulations.${Z}"
     echo ""
     echo "  ${G}Try free for 14 days:${Z} guardrail upgrade --trial"
@@ -857,7 +855,11 @@ _cmd_upgrade_trial() {
   fi
   rm -f "$tmp_tar"
 
-  date +%s > "$TRIAL_FILE"
+  if ! _guardrail_write_trial_stamp "$INSTALL_DIR"; then
+    echo "  ERROR: could not write a signed trial stamp."
+    echo "  openssl and a writable \$HOME/.guardrail are required."
+    exit 1
+  fi
 
   local pro_count
   pro_count=$(find "$PRO_DIR" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
