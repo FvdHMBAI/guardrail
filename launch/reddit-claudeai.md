@@ -1,10 +1,10 @@
-# 18 guards that keep my AI agents safe in production
+# 13 guards that keep my AI agents safe in production
 
 I run Claude Code on a production server with 82 Docker containers, 23 PostgreSQL databases, and 67 domains. One server. One developer. My agents have full shell access because that is the point of agentic coding.
 
 The insight that led to GuardRail: agents optimize. When a guard blocks `rm -rf`, they try `python3 -c "shutil.rmtree(...)"`. When they cannot push to main, they try to force-push. This is not malice. It is an LLM trying to complete its task and routing around obstacles.
 
-GuardRail catches these patterns before the command ever executes. 18 pre-execution guards that sit between the agent and the shell.
+GuardRail catches these patterns before the command ever executes. 13 pre-execution guards that sit between the agent and the shell.
 
 What it catches:
 - Force-push to main/production branches
