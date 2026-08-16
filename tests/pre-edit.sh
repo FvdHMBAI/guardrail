@@ -70,6 +70,19 @@ check "normal markdown"          allow Write "/repo/README.md" "# Title"
 check "env with placeholder"     allow Write "/repo/.env.example" "STRIPE=${STRIPE_PLACEHOLDER}"
 check "config no secrets"        allow Edit  "/repo/config.json" '{"port": 3000}'
 
+# --- NotebookEdit (notebook_path + new_source) ---
+nb_check() {
+  local name="$1" expected="$2" np="$3" src="$4" r d
+  r=$(jq -n --arg n "$np" --arg s "$src" \
+    '{"session_id":"t","tool_name":"NotebookEdit","tool_input":{"notebook_path":$n,"new_source":$s}}' |
+    GUARDRAIL_LOG_DIR="$TMP_ROOT/logs" GUARDRAIL_AUDIT_LOG="$TMP_ROOT/audit.log" bash "$DISPATCHER")
+  d=$(printf '%s' "$r" | jq -r '.hookSpecificOutput.permissionDecision // "missing"')
+  if [ "$d" = "$expected" ]; then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); FAILURES+=("$name expected=$expected actual=$d"); fi
+}
+nb_check "notebook secret"       deny  "/repo/n.ipynb" "k='${AWS_TRIG}'"
+nb_check "notebook settings"     deny  "/home/u/.claude/settings.json" "{}"
+nb_check "notebook normal"       allow "/repo/ok.ipynb" "x = 1"
+
 echo "pre-edit: $PASS passed, $FAIL failed"
 if [ "$FAIL" -gt 0 ]; then
   printf '  FAIL: %s\n' "${FAILURES[@]}"

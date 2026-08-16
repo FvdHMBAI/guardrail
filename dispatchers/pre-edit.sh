@@ -24,21 +24,24 @@ deny() {
 }
 
 # Validate payload shape; block on anything we cannot inspect.
+# file_path for Write/Edit/MultiEdit, notebook_path for NotebookEdit.
 if ! printf '%s' "$INPUT" | jq -e '
   type == "object"
   and (.tool_input | type == "object")
-  and (.tool_input.file_path | type == "string")
-  and (.tool_input.file_path | length > 0)
+  and ((.tool_input.file_path // .tool_input.notebook_path) | type == "string")
+  and ((.tool_input.file_path // .tool_input.notebook_path) | length > 0)
 ' >/dev/null 2>&1; then
-  deny "GUARDRAIL INPUT ERROR: malformed or empty Write/Edit hook payload. The operation was blocked because it could not be inspected."
+  deny "GUARDRAIL INPUT ERROR: malformed or empty Write/Edit/Notebook hook payload. The operation was blocked because it could not be inspected."
 fi
 
-FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path')
+FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // .tool_input.notebook_path')
 SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // "default"')
-# Content across Write (content), Edit (new_string) and MultiEdit (edits[].new_string)
+# Content across Write (content), Edit (new_string), MultiEdit (edits[].new_string)
+# and NotebookEdit (new_source).
 CONTENT=$(printf '%s' "$INPUT" | jq -r '
   (.tool_input.content // "")
   + "\n" + (.tool_input.new_string // "")
+  + "\n" + (.tool_input.new_source // "")
   + "\n" + ((.tool_input.edits // []) | map(.new_string // "") | join("\n"))
 ' 2>/dev/null)
 

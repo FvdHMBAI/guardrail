@@ -12,7 +12,7 @@
 GuardRail enforces on **both** mutation surfaces the agent can use:
 
 - **Bash commands** — `PreToolUse` on `Bash` (deny-capable).
-- **File writes** — `PreToolUse` on `Write` / `Edit` / `MultiEdit` (deny-capable),
+- **File writes** — `PreToolUse` on `Write` / `Edit` / `MultiEdit` / `NotebookEdit` (deny-capable),
   added in 0.4.0.
 
 Before 0.4.0, deny-capable guards ran on Bash only; file-tool writes were seen

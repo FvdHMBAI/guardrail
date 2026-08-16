@@ -151,7 +151,7 @@ jq --arg pre "$PRE_BASH" --arg post "$POST_BASH" --arg preedit "$PRE_EDIT" --arg
    then .hooks.PreToolUse += [{"matcher": "Bash", "hooks": [{"type": "command", "command": $pre}]}]
    else . end) |
   (if (.hooks.PreToolUse | any(.hooks[]?.command == $preedit)) | not
-   then .hooks.PreToolUse += [{"matcher": "Write|Edit|MultiEdit", "hooks": [{"type": "command", "command": $preedit}]}]
+   then .hooks.PreToolUse += [{"matcher": "Write|Edit|MultiEdit|NotebookEdit", "hooks": [{"type": "command", "command": $preedit}]}]
    else . end) |
   (if (.hooks.PostToolUse | any(.hooks[]?.command == $post)) | not
    then .hooks.PostToolUse += [{"matcher": "Bash", "hooks": [{"type": "command", "command": $post}]}]

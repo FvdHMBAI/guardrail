@@ -47,7 +47,7 @@ hook_edit_path_guard() {
   # 3. Auto-executed hooks and shell startup files: silent code-execution
   #    persistence (git hooks, shell rc, profile).
   if printf '%s' "$fp" | grep -qE '(^|/)(\.git/hooks/[a-z-]+|\.(bashrc|zshrc|bash_profile|profile|zprofile)|\.config/(fish/config\.fish))$'; then
-    guardrail_audit "edit_path_guard" "file-tool write to auto-executed startup/hook file" "$fp" "warned"
+    guardrail_audit "edit_path_guard" "file-tool write to auto-executed startup/hook file" "$fp" "blocked"
     deny "Blocked: writing to an auto-executed file ($fp) through a file tool. Git hooks and shell startup files run code automatically. If this is intended, make it an explicit reviewed change."
     return 0
   fi
