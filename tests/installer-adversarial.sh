@@ -56,4 +56,43 @@ test "$dangerous" = "deny"
 test "$safe" = "allow"
 ok
 
+# A fresh install must let a harmless file edit through. The pre-edit dispatcher
+# is fail-closed, so any guard it requires but the installer does not copy turns
+# every Write/Edit into a deny. Shipped for two releases without a test.
+FRESH_DIR="$TMP_ROOT/fresh-edit"
+mkdir -p "$FRESH_DIR"
+printf '%s\n' '{}' > "$FRESH_DIR/settings.json"
+GUARDRAIL_CLAUDE_DIR="$FRESH_DIR" bash "$ROOT/install.sh" >/dev/null
+PRE_EDIT="$FRESH_DIR/hooks/guardrail/dispatchers/pre-edit.sh"
+jq -e --arg command "$PRE_EDIT" \
+  '.hooks.PreToolUse[]?.hooks[]? | select(.command == $command)' \
+  "$FRESH_DIR/settings.json" >/dev/null
+
+# Every guard the dispatchers source must exist in the installed tree.
+for required in $(grep -ho '_guardrail_load_guard "[a-z_]*\.sh"' "$FRESH_DIR/hooks/guardrail/dispatchers/"*.sh |
+  sed 's/.*"\(.*\)"/\1/' | sort -u); do
+  if [ ! -f "$FRESH_DIR/hooks/guardrail/guards/core/$required" ]; then
+    echo "FAIL: dispatcher requires $required but the installer did not copy it"
+    exit 1
+  fi
+done
+ok
+
+edit_allowed=$(printf '{"session_id":"installer-test","tool_input":{"file_path":"%s/notes.txt","content":"hello world"}}' "$TMP_ROOT" |
+  bash "$PRE_EDIT" | jq -r '.hookSpecificOutput.permissionDecision')
+if [ "$edit_allowed" != "allow" ]; then
+  echo "FAIL: fresh install denies a harmless file edit ($edit_allowed)"
+  printf '{"session_id":"installer-test","tool_input":{"file_path":"%s/notes.txt","content":"hello world"}}' "$TMP_ROOT" |
+    bash "$PRE_EDIT" | jq -r '.hookSpecificOutput.permissionDecisionReason // "no reason"'
+  exit 1
+fi
+ok
+
+# The same fresh install must still deny a dangerous edit, so the assertion
+# above cannot be satisfied by disabling the edit dispatcher.
+edit_denied=$(printf '%s' '{"session_id":"installer-test","tool_input":{"file_path":"/home/someone/.ssh/authorized_keys","content":"ssh-rsa AAAA"}}' |
+  bash "$PRE_EDIT" | jq -r '.hookSpecificOutput.permissionDecision')
+test "$edit_denied" = "deny"
+ok
+
 printf 'Adversarial installer suite: passed=%s failed=0 total=%s\n' "$PASS" "$PASS"

@@ -15,11 +15,10 @@ hook_edit_path_guard() {
   [ -z "$fp" ] && return 0
 
   # Canonicalize before matching: /a/./b, /a//b and /a/../a/b all write to the
-  # same file but would slip past a literal regex. realpath -m -s normalizes
-  # . / .. / duplicate slashes WITHOUT resolving symlinks (so literal-path
-  # matches still hold). Falls back to the raw path if realpath is unavailable.
+  # same file but would slip past a literal regex. Symlinks are deliberately
+  # not resolved, so literal-path matches still hold.
   local canon
-  canon=$(realpath -m -s -- "$fp" 2>/dev/null) && [ -n "$canon" ] && fp="$canon"
+  canon=$(_guardrail_canonicalize_path "$fp" 2>/dev/null) && [ -n "$canon" ] && fp="$canon"
 
   # 1. Self-bypass: writing anything under GuardRail's own install tree via a
   #    file tool. Covers the disable mechanism AND every directory the

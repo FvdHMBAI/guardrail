@@ -24,7 +24,7 @@ else
 fi
 
 echo ""
-echo "${B}  GuardRail${Z} ${D}v0.3.1${Z}"
+echo "${B}  GuardRail${Z} ${D}v0.4.6${Z}"
 echo "${D}  Pre-execution security for AI coding agents${Z}"
 echo ""
 
@@ -49,8 +49,10 @@ mkdir -p "$STAGE_DIR/guards/custom"
 mkdir -p "$STAGE_DIR/dispatchers"
 mkdir -p "$STAGE_DIR/lib"
 
-# Copy ONLY the 11 Core guards (not Premium guards that may exist locally)
-CORE_GUARDS="main_push_guard basic_pii_gate basic_secret_detector destructive_path_guard firewall_flush_guard service_protection_guard self_bypass_guard mass_update_guard env_dump_detector basic_injection_scanner error_swallow_guard"
+# Copy ONLY the 13 Core guards (not Premium guards that may exist locally).
+# This list must cover every guard the dispatchers load, otherwise the
+# fail-closed dispatchers deny every tool call after a fresh install.
+CORE_GUARDS="main_push_guard basic_pii_gate basic_secret_detector destructive_path_guard firewall_flush_guard service_protection_guard self_bypass_guard mass_update_guard env_dump_detector basic_injection_scanner error_swallow_guard edit_path_guard edit_secret_guard"
 for guard in $CORE_GUARDS; do
   if [ ! -f "$SCRIPT_DIR/guards/core/${guard}.sh" ]; then
     echo "  ${R}ERROR${Z} Required core guard is missing: ${guard}.sh"
@@ -69,9 +71,10 @@ fi
 chmod +x "$STAGE_DIR/dispatchers/"*.sh
 chmod +x "$STAGE_DIR/guards/core/"*.sh 2>/dev/null || true
 
+CORE_GUARD_COUNT=$(printf '%s\n' $CORE_GUARDS | wc -l | tr -d ' ')
 GUARD_COUNT=$(find "$STAGE_DIR/guards/core" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
-if [ "$GUARD_COUNT" -ne 11 ]; then
-  echo "  ${R}ERROR${Z} Expected exactly 11 core guards, found $GUARD_COUNT."
+if [ "$GUARD_COUNT" -ne "$CORE_GUARD_COUNT" ]; then
+  echo "  ${R}ERROR${Z} Expected exactly $CORE_GUARD_COUNT core guards, found $GUARD_COUNT."
   exit 1
 fi
 
@@ -104,6 +107,25 @@ if [ "$(printf '%s' "$STAGE_VERIFY" | jq -r '.hookSpecificOutput.permissionDecis
   || [[ "$STAGE_REASON" != MAIN-PUSH-GUARD:* ]] \
   || [ "$(printf '%s' "$STAGE_ALLOW" | jq -r '.hookSpecificOutput.permissionDecision // "missing"')" != "allow" ]; then
   echo "  ${R}ERROR${Z} Staged hook verification failed. Existing installation was not changed."
+  exit 1
+fi
+
+# The edit dispatcher is registered too, so it has to be probed too. Without
+# this, a core guard missing from CORE_GUARDS ships an install that denies every
+# file write, and the Bash-only probe above still reports success.
+# Custom guards are pointed at an empty dir: this probe verifies the core
+# install, and a user's own guard denying the probe must not fail the upgrade.
+mkdir -p "$STAGE_DIR/.probe-custom"
+STAGE_EDIT_ALLOW=$(
+  printf '{"session_id":"install-check","tool_input":{"file_path":"%s/edit-probe.txt","content":"guardrail install probe"}}' "$STAGE_DIR" |
+    GUARDRAIL_LOG_DIR="$STAGE_DIR/logs" GUARDRAIL_AUDIT_LOG="$STAGE_DIR/audit.log" \
+    GUARDRAIL_CUSTOM_GUARDS_DIR="$STAGE_DIR/.probe-custom" \
+    bash "$STAGE_DIR/dispatchers/pre-edit.sh"
+)
+rmdir "$STAGE_DIR/.probe-custom" 2>/dev/null || true
+if [ "$(printf '%s' "$STAGE_EDIT_ALLOW" | jq -r '.hookSpecificOutput.permissionDecision // "missing"')" != "allow" ]; then
+  echo "  ${R}ERROR${Z} Staged edit hook rejected a harmless file write. Existing installation was not changed."
+  echo "    ${D}$(printf '%s' "$STAGE_EDIT_ALLOW" | jq -r '.hookSpecificOutput.permissionDecisionReason // "no reason given"')${Z}"
   exit 1
 fi
 

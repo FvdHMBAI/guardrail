@@ -3,14 +3,58 @@
 # Checks Pro license key against the API with 24h cache.
 # License: MIT
 
+GUARDRAIL_TRIAL_DAYS="${GUARDRAIL_TRIAL_DAYS:-14}"
+
+# Local instance secret, shared with the disable token. Created by install.sh,
+# 0600, and edit_path_guard blocks file-tool writes to it, so an agent cannot
+# mint its own stamps. Same trust model as .disabled: it stops the agent and
+# accidental resets, not the human who owns the machine.
+_guardrail_trial_key_file() { echo "${HOME}/.guardrail/disable.key"; }
+
+# Signs a unix timestamp exactly like the disable token: HMAC-SHA256 against
+# the local key, truncated to 32 hex chars.
+_guardrail_trial_sign() {
+  local ts="$1" key_file
+  key_file=$(_guardrail_trial_key_file)
+  [ -f "$key_file" ] || return 1
+  printf '%s' "$ts" |
+    openssl dgst -sha256 -hmac "$(cat "$key_file")" 2>/dev/null |
+    awk '{print $NF}' | cut -c1-32
+}
+
+# Writes "<ts> <signature>" so the stamp cannot be forged by writing a bare
+# timestamp. Creates the local key if an older install never generated one.
+_guardrail_write_trial_stamp() {
+  local INSTALL_DIR="$1"
+  local ts key_file sig
+  ts=$(date +%s)
+  key_file=$(_guardrail_trial_key_file)
+  if [ ! -f "$key_file" ]; then
+    mkdir -p "$(dirname "$key_file")" || return 1
+    head -c 32 /dev/urandom | base64 | tr -d '\n' > "$key_file" || return 1
+    chmod 600 "$key_file" 2>/dev/null || true
+    chmod 700 "$(dirname "$key_file")" 2>/dev/null || true
+  fi
+  sig=$(_guardrail_trial_sign "$ts") || return 1
+  [ -n "$sig" ] || return 1
+  printf '%s %s\n' "$ts" "$sig" > "$INSTALL_DIR/.trial-started"
+}
+
+# Days remaining, or -1 for "no valid trial". An unsigned or wrongly signed
+# stamp counts as no trial, not as a fresh one.
 _guardrail_trial_days_left() {
   local INSTALL_DIR="$1"
   local TRIAL_FILE="$INSTALL_DIR/.trial-started"
   [ -f "$TRIAL_FILE" ] || { echo "-1"; return; }
-  local ts
-  ts=$(tr -d '[:space:]' < "$TRIAL_FILE" 2>/dev/null)
+  local line ts sig expected
+  line=$(head -1 "$TRIAL_FILE" 2>/dev/null)
+  ts=$(printf '%s' "$line" | awk '{print $1}')
+  sig=$(printf '%s' "$line" | awk '{print $2}')
   [[ "$ts" =~ ^[0-9]+$ ]] || { echo "-1"; return; }
-  echo $(( 14 - ( ($(date +%s) - ts) / 86400 ) ))
+  [ -n "$sig" ] || { echo "-1"; return; }
+  expected=$(_guardrail_trial_sign "$ts") || { echo "-1"; return; }
+  [ -n "$expected" ] && [ "$expected" = "$sig" ] || { echo "-1"; return; }
+  echo $(( GUARDRAIL_TRIAL_DAYS - ( ($(date +%s) - ts) / 86400 ) ))
 }
 
 _guardrail_check_pro_license() {

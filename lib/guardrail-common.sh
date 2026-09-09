@@ -86,3 +86,38 @@ _guardrail_list_to_regex() {
 _guardrail_list_to_regex_raw() {
   printf '%s' "$1" | tr ' ' '\n' | tr '\n' '|' | sed 's/|$//; s/^/(/; s/$/)/'
 }
+
+# Normalizes . / .. / duplicate slashes in a path WITHOUT resolving symlinks
+# and without requiring the path to exist, so that /a/./b, /a//b and /a/../a/b
+# all reduce to the same string before a guard matches against it.
+#
+# This was `realpath -m -s`, which is GNU-only. On macOS that call fails, the
+# guard silently kept the raw path, and path-matching protections could be
+# stepped around with a leading "./". Implemented in shell so both platforms
+# behave identically. Written for bash 3.2, which is what macOS ships.
+_guardrail_canonicalize_path() {
+  local p="$1"
+  [ -n "$p" ] || return 1
+  case "$p" in
+    /*) ;;
+    *) p="$PWD/$p" ;;
+  esac
+
+  local part result=""
+  local oldifs="$IFS"
+  IFS='/'
+  # Word splitting on / is the point here, so globbing has to be off or a
+  # segment like "*" would expand against the filesystem.
+  set -f
+  for part in $p; do
+    case "$part" in
+      ''|.) ;;
+      ..) result="${result%/*}" ;;
+      *) result="$result/$part" ;;
+    esac
+  done
+  set +f
+  IFS="$oldifs"
+
+  printf '%s' "${result:-/}"
+}
