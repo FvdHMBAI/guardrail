@@ -15,8 +15,22 @@
   <a href="#how-it-compares">Comparison</a> · 
   <a href="#architecture">Architecture</a> · 
   <a href="#guardrail-pro">Pro</a> · 
-  <a href="#eu-ai-act">EU AI Act</a>
+  <a href="#eu-ai-act">EU AI Act</a> · 
+  <a href="https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=nav">Website</a>
 </p>
+
+**GuardRail blocks what your AI coding agent *does*, before it does it.** 13 free, MIT-licensed guards hook into Claude Code and refuse `git push origin main`, `DELETE` without `WHERE`, `rm -rf` on protected paths and leaked secrets before the command runs. Every block lands in an audit log.
+
+```bash
+npx guardrail-agent init      # 30 seconds. Backs up your settings. `guardrail uninstall` removes everything.
+guardrail pentest             # fires dangerous commands at your own install and shows what got caught
+```
+
+<p align="center">
+  <img src=".github/assets/block-main-push.png" alt="Claude Code session: git push origin main is blocked by main_push_guard, the push to a feature branch is allowed" width="760">
+</p>
+
+<p align="center"><sub>Free forever for the 13 core guards. Teams that need a PII shield on agent output and EU AI Act reports: <a href="https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=top">GuardRail Pro, EUR 29 per developer and month</a>.</sub></p>
 
 ---
 
