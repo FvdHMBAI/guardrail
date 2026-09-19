@@ -79,6 +79,8 @@ That's the difference between validating what an LLM *says* and blocking what an
 
 ## Quick Start
 
+Using Windows? See the [WSL setup guide](docs/windows-wsl-setup.md).
+
 ```bash
 npx guardrail-agent init
 ```
