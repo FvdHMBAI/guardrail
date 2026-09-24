@@ -16,14 +16,14 @@ hook_mass_update_guard() {
   if echo "$_sql_without_comments" | grep -qiE "UPDATE[[:space:]]+(public\\.)?${_tables_re}[[:space:]]+SET"; then
     if ! echo "$_sql_without_comments" | grep -qiE 'WHERE[[:space:]]+.*\bid[[:space:]]*='; then
       guardrail_log "mass-update-guard" "DENY sess=$SESSION_ID cmd=\"$(echo "$CMD" | head -c 200)\""
-      deny "MASS-UPDATE-GUARD: UPDATE on protected table WITHOUT 'WHERE id = ...' detected. Mass updates are blocked. Update records individually with an id filter."
+      deny "MASS-UPDATE-GUARD: UPDATE on protected table WITHOUT 'WHERE id = ...' detected. A WHERE clause alone is not enough, target rows by id, e.g. UPDATE users SET active = false WHERE id = 42."
     fi
   fi
 
   if echo "$_sql_without_comments" | grep -qiE "DELETE[[:space:]]+FROM[[:space:]]+(public\\.)?${_tables_re}" ; then
     if ! echo "$_sql_without_comments" | grep -qiE 'WHERE[[:space:]]+.*\bid[[:space:]]*='; then
       guardrail_log "mass-update-guard" "DENY DELETE without WHERE sess=$SESSION_ID"
-      deny "MASS-UPDATE-GUARD: DELETE on protected table WITHOUT WHERE clause detected. Delete records individually."
+      deny "MASS-UPDATE-GUARD: DELETE on protected table WITHOUT 'WHERE id = ...' detected. A WHERE clause alone is not enough, target rows by id, e.g. DELETE FROM users WHERE id = 42."
     fi
   fi
 }
