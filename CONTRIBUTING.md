@@ -5,14 +5,18 @@ Thanks for your interest in contributing.
 ## Quick Start
 
 ```bash
-# Clone and install
+# Clone the repo and install dev dependencies
 git clone https://github.com/FvdHMBAI/guardrail.git
 cd guardrail
-npx guardrail-agent init
+npm install
 
-# Run the test suite
-guardrail pentest
+# Run the full test suite
+npm test
 ```
+
+> **Note:** `npm install` sets up the development environment. Do not run
+> `npx guardrail-agent init` - that installs GuardRail globally into
+> `~/.claude/hooks/guardrail/` and is not needed for contributing.
 
 ## Ways to Contribute
 
@@ -22,15 +26,64 @@ Open an issue using the [guard proposal template](https://github.com/FvdHMBAI/gu
 
 ### Write a Guard
 
+New guards are added as **core guards** directly in the repository. There are
+three steps:
+
+**1. Create the guard file**
+
 ```bash
-guardrail new my_guard_name
+# Guards live in guards/core/ - name the file after your guard
+touch guards/core/my_guard_name.sh
 ```
 
-This creates a guard template and a matching test file. Edit both, run `guardrail pentest`, and open a PR.
+Every core guard is a single bash function:
+
+```bash
+#!/bin/bash
+# Guard: my_guard_name
+# One-line description of what it blocks.
+# License: MIT
+
+hook_my_guard_name() {
+  # Return early if this command is not relevant
+  echo "$CMD" | grep -qE 'pattern' || return 0
+
+  # Block: deny "Reason shown to the user."
+  # Warn:  allow_with_msg "Warning shown to the user."
+  deny "My guard blocked this command."
+}
+```
+
+**2. Register the guard in the dispatcher**
+
+Open `dispatchers/pre-bash.sh` (for pre-execution guards) or
+`dispatchers/post-bash.sh` (for post-execution guards) and add one line in the
+guard-call block:
+
+```bash
+_guardrail_run hook_my_guard_name
+```
+
+**3. Add a test**
+
+Tests live in `tests/new-guards.sh`. Add at least one DENY case and one PASS
+case:
+
+```bash
+# my_guard_name
+setup "dangerous command here"; run_pre; expect_deny "my_guard_name DENY"
+setup "safe command here";      run_pre; expect_pass "my_guard_name PASS"
+```
+
+Then run the full suite to confirm everything passes:
+
+```bash
+npm test
+```
 
 Guard requirements:
 - Pure bash, no external dependencies beyond jq
-- Must have a matching test in the PEN-test suite
+- Must have tests in `tests/new-guards.sh`
 - Must not break existing tests
 - Should handle both the direct command and common obfuscation variants
 
@@ -44,14 +97,14 @@ Open an issue with:
 
 ### Improve Documentation
 
-Documentation improvements are always welcome. Small fixes can go directly into a PR.
+Documentation improvements are always welcome. Small fixes can go directly into a PR against `main`.
 
 ## Pull Request Process
 
-1. Fork the repo and create a branch from `develop`
+1. Fork the repo and create a branch from `main`
 2. Make your changes
-3. Run `guardrail pentest` -- all tests must pass
-4. Open a PR against `develop`
+3. Run `npm test` - all tests must pass
+4. Open a PR against `main`
 
 ## Code of Conduct
 
