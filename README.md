@@ -369,6 +369,11 @@ Each tool works standalone. Together, they run a production system with 81 conta
 
 **Learn the principles behind this stack:** [18 free lessons on KI-Governance](https://lernen.promptandbuild.de)
 
+## Platform Notes
+
+- **Linux / macOS:** fully supported, no additional setup
+- **Windows (WSL2):** supported - see [docs/windows-wsl-setup.md](docs/windows-wsl-setup.md)
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Browse [good first issues](https://github.com/FvdHMBAI/guardrail/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
