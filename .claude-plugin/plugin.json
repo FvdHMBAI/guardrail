@@ -1,0 +1,10 @@
+{
+  "name": "guardrail",
+  "version": "0.4.6",
+  "description": "Pre-execution security for Claude Code: 13 guards that deny dangerous shell commands and file writes before they run.",
+  "author": { "name": "Frederik von der Heyden", "url": "https://frederikvonderheyden.de" },
+  "homepage": "https://guardrail.promptandbuild.de",
+  "repository": "https://github.com/FvdHMBAI/guardrail",
+  "license": "MIT",
+  "keywords": ["hooks", "security", "guardrails", "pretooluse", "bash"]
+}

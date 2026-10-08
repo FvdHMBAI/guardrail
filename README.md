@@ -30,33 +30,29 @@ guardrail pentest             # fires dangerous commands at your own install and
   <img src=".github/assets/block-main-push.png" alt="Claude Code session: git push origin main is blocked by main_push_guard, the push to a feature branch is allowed" width="760">
 </p>
 
-<p align="center"><sub>Free forever for the 13 core guards. Teams that need a PII shield on agent output and EU AI Act reports: <a href="https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=top">GuardRail Pro, EUR 29 per developer and month</a>.</sub></p>
+<p align="center"><sub>Free and MIT-licensed: all 13 core guards.</sub></p>
 
 ---
 
-### Last Tuesday, 2:47 AM.
+### 27 May 2026: 13 courses set to "enrolling"
 
-My AI agent tried to mass-delete a production database. **One guard said no.**
+On 27 May 2026 an agent debugging a booking system ran an `UPDATE` on the courses table without an id filter and set 13 courses to "enrolling". **That incident is why `mass_update_guard` exists.**
 
-The agent was debugging a slow query. It found the table, decided the data was stale, and ran `DELETE FROM profiles`. No WHERE clause. 23 databases, every single customer record. Gone in one command.
-
-`mass_update_guard` stopped it. That guard is one of the 13 you get for free below.
-
-Except it wasn't gone. GuardRail blocked the command before it executed. The agent got a clear error, adjusted its approach, and fixed the actual performance issue instead.
-
-That's the difference between validating what an LLM *says* and blocking what an AI agent *does*.
+It now denies `UPDATE` and `DELETE` on protected tables unless the statement targets rows with `WHERE id = ...`, and it does so before the command runs. Protected tables are configurable. The default list is `auth.users`, `profiles` and `members`, so add your own tables (the incident above needed `courses`) to `GUARDRAIL_PROTECTED_TABLES`.
 
 ```
   ┌──────────────────────────────────────────────────────────────┐
-  │  $ DELETE FROM profiles                                      │
+  │  $ UPDATE courses SET status = 'enrolling'                   │
   │                                                              │
   │  ✘ BLOCKED by mass_update_guard                              │
-  │    DELETE without WHERE clause on protected table: profiles   │
+  │    UPDATE on protected table without 'WHERE id = ...'        │
   │    Command was NOT executed.                                  │
   │                                                              │
   │  13 core guards active · fail-closed · no LLM in the path    │
   └──────────────────────────────────────────────────────────────┘
 ```
+
+That's the difference between validating what an LLM *says* and blocking what an AI agent *does*.
 
 <p align="center">
   <img src="demo/demo.gif" alt="GuardRail Demo: blocking dangerous commands in real-time" width="720">
@@ -93,6 +89,15 @@ guardrail enable     # Re-enable
 guardrail uninstall  # Clean removal
 ```
 
+### Install as a Claude Code plugin
+
+```
+/plugin marketplace add FvdHMBAI/guardrail
+/plugin install guardrail@fvdhmbai
+```
+
+The plugin registers the same dispatchers through Claude Code's plugin system. `guardrail status`, `guardrail pentest` and the rest of the CLI are only available with the npx install.
+
 Works with **Claude Code** out of the box (native hook support). Agent-runtime adapters for Codex CLI and Gemini CLI are planned.
 
 **Requirements:** bash 4+, jq, openssl. Linux or macOS.
@@ -117,10 +122,7 @@ Agent runs: rm -rf /home/developer/project
 ```
 
 Real incidents from our production system that GuardRail stopped:
-- `git reset --hard` during debugging. Would have wiped 3 hours of uncommitted work.
-- `DELETE FROM profiles` without WHERE clause. Would have deleted all user data.
-- Agent tried to `touch /tmp/approval-gate` to bypass its own safety checks.
-- 47 consecutive failed curl attempts (wrong port) before the wandering detector intervened.
+- 27 May 2026: an `UPDATE` on the courses table without an id filter set 13 courses to "enrolling". `mass_update_guard` was built from this incident and now denies such statements before they run.
 
 ## 13 Core Guards
 
@@ -175,7 +177,7 @@ GuardRail operates at a different layer than other AI safety tools:
 | **Detects wandering/loops** | Yes | No | No | No |
 | **Credential leak scanning** | Yes (output) | No | No | No |
 | **Dependencies** | bash + jq | Python + ML models | Python + LLM calls | SaaS API |
-| **Install time** | 5 seconds | Minutes | Minutes | API signup |
+| **Install time** | under a minute | Minutes | Minutes | API signup |
 | **Cost** | Free (MIT) | Free tier + paid | Free | Paid |
 | **Runtime overhead** | <1ms per guard | 50-500ms | 100ms-2s | Network latency |
 
@@ -301,6 +303,8 @@ $ guardrail pentest
 ```
 
 ## GuardRail Pro
+
+The 13 core guards stay free. Teams that need a PII shield on agent output and EU AI Act reports: <a href="https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=top">GuardRail Pro, EUR 29 per developer and month</a>.
 
 Advanced guards derived from real production incidents:
 
