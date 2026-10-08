@@ -1,0 +1,22 @@
+{
+  "name": "fvdhmbai",
+  "owner": {
+    "name": "Frederik von der Heyden",
+    "url": "https://github.com/FvdHMBAI"
+  },
+  "metadata": {
+    "description": "Claude Code plugins by Frederik von der Heyden."
+  },
+  "plugins": [
+    {
+      "name": "guardrail",
+      "source": "./",
+      "description": "Pre-execution security for Claude Code: 13 guards that deny dangerous shell commands and file writes before they run.",
+      "category": "security",
+      "tags": [
+        "hooks",
+        "security"
+      ]
+    }
+  ]
+}
