@@ -12,7 +12,7 @@ Model: Open Core (MIT framework + proprietary premium)
 | **Premium (Pro)** | 48 | Derived from production incidents. Advanced attack detection. |
 | **Internal** | 91 | Domain-specific, only relevant to our setup. |
 
-Core plus Premium is what a customer installs: 61 guards.
+Core plus Premium is what a customer installs: 62 guards.
 
 ---
 
@@ -30,6 +30,7 @@ Generic protection every AI coding agent needs. Written from scratch, no inciden
 | `service_protection_guard` | pre-bash | Blocks stop/kill on critical services (docker, postgres, sshd, traefik) |
 | `mass_update_guard` | pre-bash | Blocks SQL UPDATE/DELETE without WHERE clause on protected tables |
 | `self_bypass_guard` | pre-bash | Blocks the agent creating its own approval or gate files |
+| `public_publish_guard` | pre-bash | Blocks the agent creating public repos or gists, or switching a repo to public |
 | `edit_path_guard` | pre-edit | Blocks file-tool writes to GuardRail's own tree, the hook registry, and persistence paths |
 | `edit_secret_guard` | pre-edit | Blocks writing live credentials into files through file tools |
 | `env_dump_detector` | post-bash | Detects KEY=VALUE dumps in command output (environment leak) |

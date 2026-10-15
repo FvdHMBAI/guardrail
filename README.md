@@ -11,14 +11,14 @@
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> · 
-  <a href="#13-core-guards">13 Guards</a> · 
+  <a href="#14-core-guards">14 Guards</a> · 
   <a href="#architecture">Architecture</a> · 
   <a href="#guardrail-pro">Pro</a> · 
   <a href="#eu-ai-act">EU AI Act</a> · 
   <a href="https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=nav">Website</a>
 </p>
 
-**GuardRail blocks what your AI coding agent *does*, before it does it.** 13 free, MIT-licensed guards hook into Claude Code and refuse `git push origin main`, `DELETE` without `WHERE`, `rm -rf` on protected paths and leaked secrets before the command runs. Every block lands in an audit log.
+**GuardRail blocks what your AI coding agent *does*, before it does it.** 14 free, MIT-licensed guards hook into Claude Code and refuse `git push origin main`, `DELETE` without `WHERE`, `rm -rf` on protected paths, leaked secrets and repositories made public by the agent before the command runs. Every block lands in an audit log.
 
 ```bash
 npx guardrail-agent init      # Backs up your settings. `guardrail uninstall` removes everything.
@@ -29,7 +29,7 @@ guardrail pentest             # fires dangerous commands at your own install and
   <img src=".github/assets/block-main-push.png" alt="Claude Code session: git push origin main is blocked by main_push_guard, the push to a feature branch is allowed" width="760">
 </p>
 
-<p align="center"><sub>Free forever for the 13 core guards. Teams that need a PII shield on agent output and EU AI Act reports: <a href="https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=top">GuardRail Pro, EUR 29 per month</a>.</sub></p>
+<p align="center"><sub>Free forever for the 14 core guards. Teams that need a PII shield on agent output and EU AI Act reports: <a href="https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=top">GuardRail Pro, EUR 29 per month</a>.</sub></p>
 
 ---
 
@@ -49,7 +49,7 @@ That's the difference between validating what an LLM *says* and blocking what an
   │    UPDATE on protected table without 'WHERE id = ...'        │
   │    Command was NOT executed.                                  │
   │                                                              │
-  │  13 core guards active · fail-closed · no LLM in the path    │
+  │  14 core guards active · fail-closed · no LLM in the path    │
   └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -61,9 +61,9 @@ That's the difference between validating what an LLM *says* and blocking what an
 
 <table>
   <tr>
-    <td align="center"><strong>13</strong><br><sub>Free Guards</sub></td>
+    <td align="center"><strong>14</strong><br><sub>Free Guards</sub></td>
     <td align="center"><strong>48</strong><br><sub>Pro Guards</sub></td>
-    <td align="center"><strong>61</strong><br><sub>Guards Total</sub></td>
+    <td align="center"><strong>62</strong><br><sub>Guards Total</sub></td>
   </tr>
 </table>
 
@@ -113,7 +113,7 @@ Agent runs: rm -rf /home/developer/project
 Real incident from our production system:
 - 27 May 2026: an `UPDATE` on the courses table without an id filter set 13 courses to "enrolling". `mass_update_guard` was built from this incident and now denies such statements before they run.
 
-## 13 Core Guards
+## 14 Core Guards
 
 All free. All MIT-licensed. Every guard in these tables is installed by
 `npx guardrail-agent init` and runs on every matching tool call.
@@ -130,6 +130,7 @@ All free. All MIT-licensed. Every guard in these tables is installed by
 | `service_protection_guard` | Stopping critical services (docker, sshd, postgres, nginx) | `systemctl stop docker` |
 | `mass_update_guard` | SQL UPDATE/DELETE without WHERE clause on protected tables | `DELETE FROM profiles` |
 | `self_bypass_guard` | Agent creating its own approval/gate files | `touch /tmp/guardrail-gate-approve` |
+| `public_publish_guard` | Agent making code or data public: public repo or gist, visibility switched to public | `gh repo create x --public`, `gh gist create -p` |
 
 ### Pre-execution, file writes (block before Write / Edit / MultiEdit)
 
@@ -251,7 +252,7 @@ $ guardrail status
 
   GuardRail v0.4.8
 
-  13 core guards active
+  14 core guards active
   Enforcement verified (registered hook and deny probe)
   0 pro guards
 
@@ -316,7 +317,7 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 GuardRail's patterns are extracted from a private production system that has
 run AI coding agents across 13 applications since 2025. That system carries
-far more guards than this package, most of them tied to its own stack. The 13
+far more guards than this package, most of them tied to its own stack. The 14
 core guards here are the universal subset: they work for any codebase, any
 team, any agent.
 
