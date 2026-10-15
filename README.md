@@ -255,7 +255,7 @@ $ guardrail status
   Enforcement verified (registered hook and deny probe)
   0 pro guards
 
-  Unlock 48 Pro guards free for 14 days:
+  Try 48 Pro guards for 14 days (via Stripe):
   guardrail upgrade --trial
 
 $ guardrail pentest
@@ -282,7 +282,7 @@ For teams running agents in production. Everything in the free core, plus:
 - Multi-step attack detection (credential scan followed by exfiltration)
 - E-mail support
 
-**EUR 29 per month.** Try it for 14 days without a card: `guardrail upgrade --trial`. Purchase and invoice via Stripe on [guardrail.promptandbuild.de](https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=guardrail). Custom guards or a setup for your team: write to frederik@frederikvonderheyden.de.
+**EUR 29 per month.** The first 14 days are free: start the trial via [Stripe](https://buy.stripe.com/00w8wQfCn8Nk4UGgg2es00g) (card required, then EUR 29 per month, cancel any time) or run `guardrail upgrade --trial` for the link. Your license key arrives by email; activate it with `guardrail upgrade <key>`. Purchase and invoice via Stripe on [guardrail.promptandbuild.de](https://guardrail.promptandbuild.de?utm_source=github&utm_medium=readme&utm_campaign=guardrail). Custom guards or a setup for your team: write to frederik@frederikvonderheyden.de.
 
 ## EU AI Act
 

@@ -311,7 +311,7 @@ cmd_status() {
   else
     echo "  ${D}0${Z} pro guards"
     echo ""
-    echo "  ${B}Unlock 48 Pro guards free for 14 days:${Z}"
+    echo "  ${B}Try 48 Pro guards for 14 days (via Stripe):${Z}"
     echo "  ${G}guardrail upgrade --trial${Z}"
   fi
 
@@ -549,9 +549,9 @@ PROEOF
   local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
   if [ ! -d "$INSTALL_DIR/guards/pro" ] || [ "$(find "$INSTALL_DIR/guards/pro" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')" = "0" ]; then
     echo "  ${B}Your 13 core guards passed. But real attacks use multi-step patterns.${Z}"
-    echo "  ${D}Pro adds 48 guards from real incidents + 50 attack simulations.${Z}"
+    echo "  ${D}Pro adds 48 guards from real incidents.${Z}"
     echo ""
-    echo "  ${G}Try free for 14 days:${Z} guardrail upgrade --trial"
+    echo "  ${G}14-day trial via Stripe:${Z} guardrail upgrade --trial"
     echo ""
   else
     echo "  ${D}Advanced PEN-testing (50+ attack patterns): guardrail pentest --pro${Z}"
@@ -657,6 +657,7 @@ cmd_upgrade() {
     case "$1" in
       --key) license_key="$2"; shift 2 ;;
       --trial) trial_mode=1; shift ;;
+      GR-*) license_key="$1"; shift ;;
       *) shift ;;
     esac
   done
@@ -676,23 +677,20 @@ cmd_upgrade() {
 
   What's included:
     - 48 guards from 14 months of production AI agent operation
-    - PII Shield: scans outputs for personal data (10 EU countries)
-    - Audit Trail: structured JSONL logging of all agent actions
-    - Compliance Reporter: EU AI Act article mapping and reports
-    - Multi-step attack detection and script content analysis
-    - Agent self-bypass prevention
-    - PEN-test framework (50+ attack patterns)
-    - Priority support and updates
+    - PII scanning of agent output
+    - EU AI Act compliance report (guardrail compliance-report)
+    - Multi-step attack detection
+    - E-mail support
 
   Pricing:
-    EUR 29/dev/month    https://guardrail.promptandbuild.de
+    EUR 29/month        https://guardrail.promptandbuild.de
 
   Start now:
-    guardrail upgrade --trial               Free 14-day trial
-    guardrail upgrade --key GR-PRO-...      Activate with license key
+    guardrail upgrade --trial               14 days free via Stripe (card required)
+    guardrail upgrade GR-PRO-...            Activate with license key
 
   The book behind the system:
-    "Runs Without Me" - amazon.de/dp/B0HDMT162J
+    "Runs Without Me. You Can Too." - amazon.de/dp/B0HDMVKRMG
 
 EOF
     return
@@ -789,8 +787,8 @@ EOF
 _cmd_upgrade_trial() {
   local api_url="$1"
   local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
-  local PRO_DIR="$INSTALL_DIR/guards/pro"
   local TRIAL_FILE="$INSTALL_DIR/.trial-started"
+  local checkout_url="${GUARDRAIL_TRIAL_CHECKOUT_URL:-https://buy.stripe.com/00w8wQfCn8Nk4UGgg2es00g}"
 
   if [ ! -d "$INSTALL_DIR/guards/core" ]; then
     echo ""
@@ -804,74 +802,49 @@ _cmd_upgrade_trial() {
     return
   fi
 
+  # Trials started with an earlier version keep running until their signed
+  # stamp expires. No new stamps are written: the trial now runs via Stripe.
   if [ -f "$TRIAL_FILE" ]; then
     local trial_days_left
     trial_days_left=$(_guardrail_trial_days_left "$INSTALL_DIR")
-    if [ "$trial_days_left" -le 0 ]; then
+    if [ "$trial_days_left" -gt 0 ]; then
       echo ""
-      echo "  Your trial has expired."
-      echo ""
-      echo "  ${B}Keep your Pro guards:${Z} https://guardrail.promptandbuild.de"
-      echo "  Then: guardrail upgrade --key YOUR_KEY"
+      echo "  Trial already active ($trial_days_left days remaining)."
+      echo "  Run 'guardrail status' to see your Pro guards."
       return
     fi
     echo ""
-    echo "  Trial already active ($trial_days_left days remaining)."
-    echo "  Run 'guardrail status' to see your Pro guards."
-    return
+    echo "  Your trial has expired."
   fi
+
+  # The license server answers 410 with {error, message, trial_url}. Only the
+  # status and a small JSON body are read, never an archive.
+  local tmp_body http_code api_message="" api_trial_url=""
+  tmp_body=$(mktemp /tmp/guardrail-trial-XXXXXX.json)
+  http_code=$(curl -s --connect-timeout 10 --max-time 15 --max-filesize 65536 \
+    -o "$tmp_body" -w '%{http_code}' "$api_url/api/guards/trial" 2>/dev/null) || true
+  if [ "$http_code" = "410" ] && command -v jq >/dev/null 2>&1; then
+    api_message=$(jq -r '.message // empty' "$tmp_body" 2>/dev/null | head -c 500 | tr -d '\000-\010\013-\037\177')
+    api_trial_url=$(jq -r '.trial_url // empty' "$tmp_body" 2>/dev/null)
+  fi
+  rm -f "$tmp_body"
+  case "$api_trial_url" in
+    https://buy.stripe.com/*) checkout_url="$api_trial_url" ;;
+  esac
 
   echo ""
-  echo "  ${B}GuardRail Pro - 14-Day Free Trial${Z}"
+  echo "  ${B}GuardRail Pro - 14-day trial${Z}"
   echo ""
-  echo "  Downloading 48 Pro guards..."
-
-  local tmp_tar
-  tmp_tar=$(mktemp /tmp/guardrail-trial-XXXXXX.tar.gz)
-
-  local http_code
-  http_code=$(curl -sf --connect-timeout 10 --max-time 30 -o "$tmp_tar" -w '%{http_code}' \
-    "$api_url/api/guards/trial" 2>/dev/null || echo "000")
-
-  if [ "$http_code" != "200" ] || [ ! -s "$tmp_tar" ]; then
-    rm -f "$tmp_tar"
-    echo "  ERROR: Trial download failed (HTTP $http_code)."
-    echo "  Try again or contact: frederik@frederikvonderheyden.de"
-    exit 1
+  if [ -n "$api_message" ]; then
+    echo "  $api_message"
+    echo ""
   fi
-
-  mkdir -p "$PRO_DIR"
-
-  if tar -tzf "$tmp_tar" 2>/dev/null | grep -qE '(^/|\.\.)'; then
-    rm -f "$tmp_tar"
-    echo "  ERROR: Archive contains unsafe paths. Aborting."
-    exit 1
-  fi
-
-  if ! tar -xzf "$tmp_tar" -C "$PRO_DIR" 2>/dev/null; then
-    rm -f "$tmp_tar"
-    echo "  ERROR: Failed to extract trial guards."
-    exit 1
-  fi
-  rm -f "$tmp_tar"
-
-  if ! _guardrail_write_trial_stamp "$INSTALL_DIR"; then
-    echo "  ERROR: could not write a signed trial stamp."
-    echo "  openssl and a writable \$HOME/.guardrail are required."
-    exit 1
-  fi
-
-  local pro_count
-  pro_count=$(find "$PRO_DIR" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')
-
-  echo "  ${G}$pro_count Pro guards installed.${Z}"
+  echo "  Start the trial via Stripe: 14 days free, card required, then EUR 29/month,"
+  echo "  cancel any time:"
+  echo "  ${G}$checkout_url${Z}"
   echo ""
-  echo "  Your trial runs for 14 days. After that:"
-  echo "  - Subscribe at https://guardrail.promptandbuild.de"
-  echo "  - Run: guardrail upgrade --key YOUR_KEY"
-  echo ""
-  echo "  ${D}Run 'guardrail status' to see all active guards.${Z}"
-  echo "  ${D}Run 'guardrail pentest --pro' for the full attack simulation.${Z}"
+  echo "  Your license key arrives by email. Then run:"
+  echo "  ${G}guardrail upgrade <key>${Z}"
   echo ""
 }
 

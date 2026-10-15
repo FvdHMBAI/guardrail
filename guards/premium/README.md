@@ -29,6 +29,6 @@ GuardRail Pro ships 48 guards. A selection:
 
 ## Pricing
 
-GuardRail Pro costs EUR 29 per month. Try it for 14 days without a card: `guardrail upgrade --trial`.
+GuardRail Pro costs EUR 29 per month. The first 14 days are free via Stripe (card required, then EUR 29 per month, cancel any time): https://buy.stripe.com/00w8wQfCn8Nk4UGgg2es00g. Activate the emailed key with `guardrail upgrade <key>`.
 
 Learn more: https://guardrail.promptandbuild.de
