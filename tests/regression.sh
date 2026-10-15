@@ -249,6 +249,10 @@ done
 fi
 
 # Phase 23: Shield v2 contract and fail-unverified behavior
+# The premium guard is not part of the npm package: package.json "files" ships
+# guards/core and guards/custom only. Without this check every npm install from
+# v0.3.0 to v0.4.6 failed this phase and install.sh rolled GuardRail back.
+if [ -f "$REPO_DIR/guards/premium/post_pii_shield_guard.sh" ]; then
 echo "Phase 23: Shield v2 compatibility"
 source "$REPO_DIR/guards/premium/post_pii_shield_guard.sh"
 add_context() { RESULT="$1"; }
@@ -282,6 +286,9 @@ RESULT=""
 hook_post_pii_shield_guard
 printf '%s' "$RESULT" | grep -q "could not verify" \
   && ok || fail "[shield-v2] transport failure must fail unverified"
+else
+echo "Phase 23: Shield v2 compatibility (skipped: premium guards are not in this package)"
+fi
 
 echo ""
 echo "=== Results: Passed=$P Failed=$F ==="
