@@ -1,7 +1,7 @@
 {
   "name": "guardrail-agent",
-  "version": "0.4.8",
-  "description": "Pre-execution security for AI coding agents. 13 free guards that block dangerous commands and file writes before they run, plus 48 Pro guards. 14-day Pro trial via Stripe (card required, then EUR 29/month, cancel any time).",
+  "version": "0.4.9",
+  "description": "Pre-execution security for AI coding agents. 14 free guards that block dangerous commands and file writes before they run, plus 48 Pro guards. 14-day Pro trial via Stripe (card required, then EUR 29/month, cancel any time).",
   "bin": {
     "guardrail": "./bin/guardrail.sh"
   },

@@ -129,6 +129,7 @@ sensible defaults. The config file is sourced by `guardrail-common.sh`.
 | `service_protection_guard` | Service safety | Critical services |
 | `mass_update_guard` | Database safety | Bulk data changes |
 | `self_bypass_guard` | Agent governance | Gate file integrity |
+| `public_publish_guard` | Data protection | Repository and gist visibility |
 | `deploy_branch_guard` | Deployment safety | Branch discipline |
 | `large_diff_guard` | Code quality | Commit hygiene |
 | `tool_call_budget_guard` | Cost control | API budget |

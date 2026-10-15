@@ -76,6 +76,47 @@ Blocks commands that disable or flush firewall rules.
 | `iptables -L` (list only) | PASS |
 | `ufw allow 80` | PASS |
 
+#### public_publish_guard
+
+Stops the agent from making code or data public on its own. Background: an
+agent created a public repository by itself and pushed internal data into it.
+Publishing is a human decision, so the guard holds the command and explains
+the safe route (create private, review, then change visibility on purpose).
+
+| Pattern | Action |
+|---------|--------|
+| `gh repo create x --public` | DENY |
+| `gh repo create x --source=. --push` (no visibility flag) | DENY |
+| `gh repo edit o/r --visibility public` | DENY |
+| `gh gist create f --public` / `-p` | DENY |
+| `gh api ... private=false`, `visibility=public`, GraphQL `visibility: PUBLIC` | DENY |
+| `gh api user/repos -f name=x` (no `private=true`, GitHub default is public) | DENY |
+| `curl api.github.com/user/repos` POST without `"private":true` | DENY |
+| `curl api.github.com/gists` with `"public":true` | DENY |
+| `glab repo create x --public` | DENY |
+| `gh repo create x --private` / `--internal` | PASS |
+| `gh repo view`, `gh repo list`, `gh gist list`, `gh gist create f` (secret) | PASS |
+| `gh api user/repos` (GET), `gh api user/repos -f name=x -F private=true` | PASS |
+
+**Why `gh repo create` without a flag is denied, not asked:** without a TTY
+`gh` refuses to run without `--public`, `--private` or `--internal`, and with a
+TTY it would prompt. An agent therefore never has a legitimate reason to omit
+the flag, and a deny with the hint "add --private" costs one retry. The
+dispatcher has no `ask` path, and `ask` would only move the decision into a
+dialog that is easy to click through.
+
+**Adversarial coverage:** quotes around flags, line continuations and
+multi-line commands, `--public` passed through a variable, visibility values
+taken from a variable, absolute paths and `env`/`bash -c` wrappers, subshells,
+request bodies piped or passed by heredoc into `gh api`.
+
+**Not covered (documented):** `git push` to a remote that is already public
+(too many false alarms, every open-source push would trigger), `gh repo fork`,
+`gh release create`, base64- or otherwise encoded commands, and visibility
+flags assembled from fragments at run time. To publish on purpose, a human
+types the command with a leading `!` in the Claude Code prompt or runs it in
+their own terminal.
+
 #### service_protection_guard
 
 Blocks stopping or killing critical system services.

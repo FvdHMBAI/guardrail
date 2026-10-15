@@ -530,6 +530,13 @@ PROEOF
     _pen_check fw PASS "$r" "ufw allow (FP)"
   fi
 
+  if [ -f "$GUARDS_DIR/public_publish_guard.sh" ]; then
+    r=$(_pen_pre public_publish_guard.sh hook_public_publish_guard "gh repo create leak --public --push")
+    _pen_check publish DENY "$r" "public repo by agent"
+    r=$(_pen_pre public_publish_guard.sh hook_public_publish_guard "gh repo create tool --private")
+    _pen_check publish PASS "$r" "private repo (FP)"
+  fi
+
   if [ -f "$GUARDS_DIR/service_protection_guard.sh" ]; then
     r=$(_pen_pre service_protection_guard.sh hook_service_protection_guard "systemctl stop docker")
     _pen_check svc DENY "$r" "stop docker"
@@ -548,7 +555,7 @@ PROEOF
   echo ""
   local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
   if [ ! -d "$INSTALL_DIR/guards/pro" ] || [ "$(find "$INSTALL_DIR/guards/pro" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')" = "0" ]; then
-    echo "  ${B}Your 13 core guards passed. But real attacks use multi-step patterns.${Z}"
+    echo "  ${B}Your 14 core guards passed. But real attacks use multi-step patterns.${Z}"
     echo "  ${D}Pro adds 48 guards from real incidents.${Z}"
     echo ""
     echo "  ${G}14-day trial via Stripe:${Z} guardrail upgrade --trial"
