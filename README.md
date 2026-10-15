@@ -63,7 +63,7 @@ That's the difference between validating what an LLM *says* and blocking what an
   <tr>
     <td align="center"><strong>14</strong><br><sub>Free Guards</sub></td>
     <td align="center"><strong>48</strong><br><sub>Pro Guards</sub></td>
-    <td align="center"><strong>61</strong><br><sub>Guards Total</sub></td>
+    <td align="center"><strong>62</strong><br><sub>Guards Total</sub></td>
   </tr>
 </table>
 

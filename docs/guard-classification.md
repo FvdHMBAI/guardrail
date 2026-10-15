@@ -12,7 +12,7 @@ Model: Open Core (MIT framework + proprietary premium)
 | **Premium (Pro)** | 48 | Derived from production incidents. Advanced attack detection. |
 | **Internal** | 91 | Domain-specific, only relevant to our setup. |
 
-Core plus Premium is what a customer installs: 61 guards.
+Core plus Premium is what a customer installs: 62 guards.
 
 ---
 
