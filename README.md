@@ -400,6 +400,11 @@ Each tool works standalone. Together, they run a production system with 81 conta
 
 **The full methodology in book form:** [Running Without Me](https://promptandbuild.de/book?utm_source=github&utm_medium=readme&utm_campaign=guardrail). How a solo founder runs 13 applications with AI agents and zero ops staff.
 
+## Platform Notes
+
+- **Linux / macOS:** fully supported, no additional setup
+- **Windows (WSL2):** supported - see [docs/windows-wsl-setup.md](docs/windows-wsl-setup.md)
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Browse [good first issues](https://github.com/FvdHMBAI/guardrail/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
