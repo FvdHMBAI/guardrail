@@ -36,13 +36,18 @@ hook_public_publish_guard() {
 
   # Normalise: join line continuations, turn newlines into separators,
   # drop quotes and backslashes, collapse whitespace.
+  # Portable (BSD/macOS and GNU): bash parameter expansion instead of
+  # sed N/\n, which BSD sed handles differently (it drops a single-line input).
   local n
-  n=$(printf '%s' "$CMD" | sed -e ':a' -e 'N' -e '$!ba' -e 's/\\\n/ /g' | tr '\n\t' '; ' | tr -d "\"'\\\\\`" | tr -s ' ')
+  n=${CMD//$'\\\n'/ }
+  n=$(printf '%s' "$n" | tr '\n\t' '; ' | tr -d "\"'\\\\\`" | tr -s ' ')
   # Subshell and brace characters become spaces; then split into simple
   # commands (one per line) on ; && || |
   n=$(printf '%s' "$n" | tr '(){}' '    ' | tr -s ' ')
   local segs
-  segs=$(printf '%s' "$n" | sed -e 's/&&/\n/g' -e 's/||/\n/g' | tr ';|' '\n\n')
+  segs=${n//&&/$'\n'}
+  segs=${segs//||/$'\n'}
+  segs=$(printf '%s' "$segs" | tr ';|' '\n\n')
 
   local gh_re='(^|[[:space:]/=$])gh[[:space:]]+'
   local seg
