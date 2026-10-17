@@ -555,7 +555,7 @@ PROEOF
   echo ""
   local INSTALL_DIR="${GUARDRAIL_CLAUDE_DIR:-$HOME/.claude}/hooks/guardrail"
   if [ ! -d "$INSTALL_DIR/guards/pro" ] || [ "$(find "$INSTALL_DIR/guards/pro" -name "*.sh" 2>/dev/null | wc -l | tr -d ' ')" = "0" ]; then
-    echo "  ${B}Your 14 core guards passed. But real attacks use multi-step patterns.${Z}"
+    echo "  ${B}Your 15 core guards passed. But real attacks use multi-step patterns.${Z}"
     echo "  ${D}Pro adds 48 guards from real incidents.${Z}"
     echo ""
     echo "  ${G}14-day trial via Stripe:${Z} guardrail upgrade --trial"
