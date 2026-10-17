@@ -112,6 +112,15 @@ echo "Phase 8: mass_update_guard"
 run_pre mass_update_guard.sh hook_mass_update_guard "psql -c \"DELETE FROM profiles\""; check mass DENY "no WHERE"
 run_pre mass_update_guard.sh hook_mass_update_guard "psql -c \"DELETE FROM profiles WHERE id = '1'\""; check mass PASS "with WHERE"
 
+# Phase 8b: docker_container_guard
+echo "Phase 8b: docker_container_guard"
+run_pre docker_container_guard.sh hook_docker_container_guard "docker run --privileged alpine"; check docker DENY "privileged"
+run_pre docker_container_guard.sh hook_docker_container_guard "docker run --network host alpine"; check docker DENY "host network"
+run_pre docker_container_guard.sh hook_docker_container_guard "docker run --pid host alpine"; check docker DENY "host pid"
+run_pre docker_container_guard.sh hook_docker_container_guard "docker run -v /:/host alpine"; check docker DENY "host root mount"
+run_pre docker_container_guard.sh hook_docker_container_guard "docker run -v /home/user/app:/app alpine"; check docker PASS "scoped volume mount"
+run_pre docker_container_guard.sh hook_docker_container_guard "docker run -p 8080:80 alpine"; check docker PASS "plain run with port publish"
+
 # Phase 9: env_dump_detector
 echo "Phase 9: env_dump_detector"
 DUMP=$(printf '%s\n' "HOME=/root" "PATH=/usr/bin" "SHELL=/bin/bash" "USER=root" "LANG=en" "TERM=x" "EDITOR=vim" "SSH_AUTH=/tmp" "DISPLAY=:0" "XDG=/run")

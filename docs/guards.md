@@ -131,6 +131,18 @@ Blocks stopping or killing critical system services.
 
 **Config:** `GUARDRAIL_CRITICAL_SERVICES` (default: `sshd nginx postgres docker containerd`)
 
+#### docker_container_guard
+
+Blocks `docker run`/`docker create` flags that break container isolation.
+
+| Pattern | Action |
+|---------|--------|
+| `docker run --privileged alpine` | DENY |
+| `docker run --network host alpine` | DENY |
+| `docker run --pid host alpine` | DENY |
+| `docker run -v /:/host alpine` | DENY |
+| `docker run -v /home/user/app:/app alpine` | PASS |
+
 #### mass_update_guard
 
 Blocks SQL UPDATE/DELETE without WHERE clause on protected tables.

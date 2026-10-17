@@ -94,6 +94,7 @@ _guardrail_load_guard "firewall_flush_guard.sh"
 _guardrail_load_guard "service_protection_guard.sh"
 _guardrail_load_guard "self_bypass_guard.sh"
 _guardrail_load_guard "public_publish_guard.sh"
+_guardrail_load_guard "docker_container_guard.sh"
 _guardrail_run hook_main_push_guard
 _guardrail_run hook_basic_pii_gate
 _guardrail_run hook_basic_secret_detector
@@ -102,6 +103,7 @@ _guardrail_run hook_firewall_flush_guard
 _guardrail_run hook_service_protection_guard
 _guardrail_run hook_self_bypass_guard
 _guardrail_run hook_public_publish_guard
+_guardrail_run hook_docker_container_guard
 CMD_LOWER=$(printf '%s' "$CMD" | tr '[:upper:]' '[:lower:]')
 case "$CMD_LOWER" in
   *"psql"*|*"pgcli"*|*"docker exec"*psql*)

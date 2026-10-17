@@ -49,10 +49,10 @@ mkdir -p "$STAGE_DIR/guards/custom"
 mkdir -p "$STAGE_DIR/dispatchers"
 mkdir -p "$STAGE_DIR/lib"
 
-# Copy ONLY the 14 Core guards (not Premium guards that may exist locally).
+# Copy ONLY the 15 Core guards (not Premium guards that may exist locally).
 # This list must cover every guard the dispatchers load, otherwise the
 # fail-closed dispatchers deny every tool call after a fresh install.
-CORE_GUARDS="main_push_guard basic_pii_gate basic_secret_detector destructive_path_guard firewall_flush_guard service_protection_guard self_bypass_guard public_publish_guard mass_update_guard env_dump_detector basic_injection_scanner error_swallow_guard edit_path_guard edit_secret_guard"
+CORE_GUARDS="main_push_guard basic_pii_gate basic_secret_detector destructive_path_guard firewall_flush_guard service_protection_guard self_bypass_guard public_publish_guard mass_update_guard env_dump_detector basic_injection_scanner error_swallow_guard edit_path_guard edit_secret_guard docker_container_guard"
 for guard in $CORE_GUARDS; do
   if [ ! -f "$SCRIPT_DIR/guards/core/${guard}.sh" ]; then
     echo "  ${R}ERROR${Z} Required core guard is missing: ${guard}.sh"
